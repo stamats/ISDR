@@ -1,0 +1,546 @@
+---
+title: "Chapter 2: Descriptive Statistics"
+author: "Matthias Kohl"
+date: "March 2021"
+output:
+  rmarkdown::html_document:
+    theme: united
+    highlight: tango
+    toc: true
+---
+
+
+## 2.1 Basics
+
+## 2.2 Excursus: Data Import and Export with R
+
+## 2.3 Import of ICU-Dataset
+
+```{r}
+ICUData <- read.csv(file = "ICUData.csv")
+```
+
+
+```{r}
+View(ICUData)
+```
+
+
+```{r}
+str(ICUData)
+```
+
+
+## 2.4 Excursus: Installation of Contributed Packages
+
+```{r, eval=FALSE}
+install.packages(c("DescTools", "scales", "ggplot2", "MKdescr"))
+```
+
+
+```{r}
+library(DescTools)
+library(scales)
+library(ggplot2)
+library(MKdescr)
+```
+
+
+## 2.5 Categorical Variables
+
+### 2.5.1 Univariate Analysis
+
+```{r}
+table(ICUData$surgery)
+```
+
+
+```{r}
+table(ICUData$surgery)/nrow(ICUData)
+```
+
+
+```{r}
+Freq(ICUData$surgery)
+```
+
+
+```{r, fig.width=9}
+barplot(table(ICUData$surgery))
+```
+
+
+```{r, fig.width=9}
+barplot(table(ICUData$surgery), main = "Kind of surgery",
+        ylab = "Absolute frequency")
+```
+
+
+```{r, fig.width=9}
+## Assign data
+ggplot(ICUData, aes(x=surgery)) +
+  ## Add bars with relative frequencies
+  geom_bar(aes(y = (..count..)/sum(..count..)), width = 0.5) +
+  ## The percent of relative frequency
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  ## Title and label of y axis
+  ggtitle("Kind of surgery") + ylab("Relative frequency in %")
+```
+
+
+```{r}
+pie(table(ICUData$surgery), main = "Kind of surgery")
+```
+
+
+```{r}
+ceiling(c(2.01, 3.88))
+```
+
+
+```{r}
+## Concatenating numbers to a vector
+x <- c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
+## Sequence: beginn = 2, end = 20, distance = 2
+x <- seq(from = 2, to = 20, by = 2)
+```
+
+
+```{r}
+x
+## R default
+quantile(x, probs = 0.2)
+## Type used by SAS software
+quantile(x, type = 3, probs = 0.2)
+## Type used by SPSS and Minitab software
+quantile(x, type = 6, probs = 0.2)
+```
+
+
+```{r}
+median(ICUData$SAPS.II)
+## also possible
+quantile(ICUData$SAPS.II, probs = 0.5)
+```
+
+
+```{r}
+IQR(ICUData$SAPS.II)
+```
+
+
+```{r}
+mad(ICUData$SAPS.II, constant = 1.0)
+```
+
+
+```{r}
+mad(ICUData$SAPS.II)
+```
+
+
+```{r}
+sIQR(ICUData$SAPS.II)
+```
+
+
+```{r, fig.width=9}
+## Assign data
+ggplot(ICUData, aes(x=SAPS.II)) +
+  ## Add bars
+  geom_bar(aes(y = 100*(..count..)/sum(..count..))) +
+  ## Percent of the relative frequency
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  ## Title and label of y axis
+  ggtitle("SAPS II") + ylab("Relative frequency in %")
+```
+
+
+```{r}
+boxplot(ICUData$SAPS.II, main = "500 ICU patients", ylab = "SAPS II score")
+```
+
+
+```{r}
+ggplot(ICUData, aes(x = 1, y = SAPS.II)) +
+  geom_boxplot() + xlim(0, 2) + ylab("SAPS II Score") +
+  ggtitle("500 ICU Patients")
+```
+
+
+```{r}
+ggplot(ICUData, aes(x = 1, y = SAPS.II)) +
+  geom_boxplot() + xlim(0, 2) + ylab("SAPS II Score") +
+  geom_point() + ggtitle("500 ICU Patients")
+```
+
+
+```{r}
+ggplot(ICUData, aes(x = 1, y = SAPS.II)) +
+  geom_boxplot() + xlim(0, 2) + ylab("SAPS II Score") +
+  geom_point(alpha = 0.1) + ggtitle("500 ICU Patients")
+```
+
+
+```{r}
+ggplot(ICUData, aes(x = 1, y = SAPS.II)) +
+  geom_boxplot() + xlim(0, 2) + ylab("SAPS II Score") +
+  geom_jitter(height = 0, width = 0.1, alpha = 0.2) + 
+  ggtitle("500 ICU Patients")
+```
+
+
+```{r}
+x <- c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
+quantile(x, probs = c(0.5, 0.75, 0.9, 0.95))
+```
+
+
+```{r}
+x <- c(2, 4, 6, 8, 10, 12, 14, 16, 18, 200)
+quantile(x, probs = c(0.5, 0.75, 0.9, 0.95))
+```
+
+
+```{r}
+plot(ecdf(ICUData$SAPS.II), xlab = "SAPS II", do.points = FALSE,
+     main = "Empirical cumulative distribution function")
+```
+
+
+```{r}
+ggplot(ICUData, aes(x = SAPS.II)) + stat_ecdf() + xlab("SAPS II") + 
+  ylab("Fn(x)") + ggtitle("Empirical cumulative distribution function")
+```
+
+
+### 2.5.2 Bivariate Analysis
+
+```{r}
+table(ICUData$sex, ICUData$surgery)
+```
+
+
+```{r}
+proportions(table(ICUData$sex, ICUData$surgery), margin = 1)
+```
+
+
+```{r}
+round(100*proportions(table(ICUData$sex, ICUData$surgery), margin = 1), 1)
+```
+
+
+```{r}
+PercTable(table(ICUData$sex, ICUData$surgery), rfrq = "010")
+```
+
+
+```{r}
+## phi coefficient
+Phi(table(ICUData$sex, ICUData$surgery))
+## Pearson's contingency coefficient
+ContCoef(table(ICUData$sex, ICUData$surgery))
+## Cramer's V
+CramerV(table(ICUData$sex, ICUData$surgery))
+```
+
+
+```{r, fig.width=9}
+barplot(prop.table(table(ICUData$sex, ICUData$surgery), margin = 1),
+        beside = TRUE, legend.text = TRUE, ylab = "Relative frequency",
+        main = "Sex and surgery")
+```
+
+
+```{r}
+ggplot(ICUData, aes(x = surgery, fill = sex)) +
+  geom_bar(aes(y = (..count..)/tapply(..count.., ..fill.., sum)[..fill..]), 
+           position = "dodge") + scale_fill_grey() + 
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  ylab("Relative frequency [%]") + xlab("Surgery") +
+  ggtitle("Sex and surgery")
+```
+
+
+```{r}
+## Spearman's rho
+cor(ICUData$SAPS.II, ICUData$LOS, method = "spearman")
+## Kendall's tau
+cor(ICUData$SAPS.II, ICUData$LOS, method = "kendall")
+```
+
+
+```{r}
+plot(ICUData$SAPS.II, ICUData$LOS, xlab = "SAPS II", ylab = "LOS",
+     main = "SAPS II and LOS")
+```
+
+
+```{r}
+ggplot(ICUData, aes(x=SAPS.II, y=LOS)) +
+  ## shape = 19: slightly larger point
+  ## alpha = 0.25: strength of blending
+  geom_point(shape=19, alpha=0.25) +
+  ## title and labels
+  ggtitle("SAPS II and LOS") + xlab("SAPS II") + ylab("LOS")
+```
+
+
+## 2.6 Metric Variables
+
+### 2.6.1 Univariate Analysis
+
+```{r}
+mean(ICUData$temperature)
+```
+
+
+```{r}
+round(mean(ICUData$temperature), 1)
+```
+
+
+```{r}
+median(ICUData$temperature)
+```
+
+
+```{r}
+round(mean(ICUData$LOS),1)
+median(ICUData$LOS)
+```
+
+
+```{r}
+log(Gmean(ICUData$bilirubin))
+```
+
+
+```{r}
+mean(log(ICUData$bilirubin))
+```
+
+
+```{r}
+exp(mean(log(ICUData$bilirubin)))
+```
+
+
+```{r}
+var(ICUData$temperature)
+sd(ICUData$temperature)
+```
+
+
+```{r}
+n <- nrow(ICUData)
+(n-1)/n*var(ICUData$temperature)
+(n-1)/n*sd(ICUData$temperature)
+```
+
+
+```{r}
+sd(ICUData$temperature)
+mad(ICUData$temperature)
+sIQR(ICUData$temperature)
+```
+
+
+```{r}
+CV(ICUData$temperature)
+medCV(ICUData$temperature)
+iqrCV(ICUData$temperature)
+```
+
+
+```{r}
+log(Gsd(ICUData$bilirubin))
+sd(log(ICUData$bilirubin))
+```
+
+
+```{r}
+Skew(ICUData$temperature)
+```
+
+
+```{r}
+## Patient 398
+ICUData$temperature[398]
+```
+
+
+```{r}
+Skew(ICUData$temperature[-398])
+```
+
+
+```{r}
+sd(ICUData$temperature[-398])
+```
+
+
+```{r}
+Skew(ICUData$LOS)
+```
+
+
+```{r}
+Kurt(ICUData$temperature)
+Kurt(ICUData$temperature[-398])
+```
+
+
+```{r}
+Kurt(ICUData$LOS)
+```
+
+
+```{r}
+## Box-and-whisker plot at position x = 1
+ggplot(ICUData, aes(x = 1, y = temperature)) +
+  geom_boxplot() + xlim(0, 2) + ylab("Maximum body temperature") +
+  geom_jitter(height = 0, width = 0.1, alpha = 0.1) + 
+  ggtitle("500 ICU patients")
+```
+
+
+```{r}
+hist(ICUData$temperature, breaks = seq(from = 9.0, to = 42, by = 0.5),
+     main = "500 ICU patients", xlab = "Maximum body temperature",
+     ylab = "Absolute frequency")
+```
+
+
+```{r}
+hist(ICUData$temperature, breaks = seq(from = 9.0, to = 42, by = 0.5),
+     main = "500 ICU patients", xlab = "Maximum body temperature",
+     ylab = "Absolute frequency", xlim = c(33,43))
+abline(v = median(ICUData$temperature))
+```
+
+
+```{r}
+ggplot(ICUData, aes(x = LOS)) + geom_histogram(binwidth = 1) +
+  xlab("Length of stay in days") + ylab("Absolute frequency") +
+  ggtitle("500 ICU patients")
+```
+
+
+```{r}
+plot(density(ICUData$temperature[-398]), xlab = "Maximum body temperature",
+     ylab = "Density", main = "500 ICU patients")
+```
+
+
+```{r}
+hist(ICUData$temperature[-398], breaks = seq(from = 33, to = 42, by = 0.5),
+     xlab = "Maximum body temperature", ylab = "Density", freq = FALSE,
+     main = "500 ICU patients")
+lines(density(ICUData$temperature[-398]))
+```
+
+
+```{r}
+ggplot(ICUData[-398,], aes(x=temperature)) +
+  geom_histogram(aes(y=..density..), binwidth = 0.5) +
+  geom_density(color = "orange") + ylab("Density") +
+  xlab("Maximum body temperature") +
+  ggtitle("500 ICU patients")
+```
+
+
+```{r}
+ggplot(ICUData[-398,], aes(x=temperature)) +
+  geom_histogram(aes(y=..density..), binwidth = 0.5, closed = "right") +
+  geom_density(color = "orange") + ylab("Density") +
+  xlab("Maximum body temperature - closed = 'right'") +
+  ggtitle("500 ICU patients")
+ggplot(ICUData[-398,], aes(x=temperature)) +
+  geom_histogram(aes(y=..density..), binwidth = 0.5, closed = "left") +
+  geom_density(color = "orange") + ylab("Density") +
+  xlab("Maximum body temperature - closed = 'left'") +
+  ggtitle("500 ICU patients")
+```
+
+
+```{r}
+plot(ecdf(ICUData$temperature[-398]), xlab = "Maximum body temperature",
+     main = "Empirical cumulative distribution function", do.points = FALSE)
+```
+
+
+```{r}
+ggplot(ICUData[-398,], aes(x = temperature)) + stat_ecdf() + 
+  xlab("Maximum body temperature") + ylab("Fn(x)") + 
+  ggtitle("Empirical cumulative distribution function")
+```
+
+
+### 2.6.2 Bivariate Analysis
+
+```{r}
+cor(ICUData$temperature, ICUData$heart.rate)
+```
+
+
+```{r}
+ggplot(ICUData, aes(x=temperature, y=heart.rate)) +
+  ## shape = 19: somewhat larger point
+  ## alpha = 0.25: strength of alpha blending
+  geom_point(shape=19, alpha=0.25) +
+  ## title and axes labels
+  ggtitle("500 ICU patients") + xlab("Maximum body temperature") +
+  ylab("Maximum heart rate")
+```
+
+
+```{r}
+ggplot(ICUData, aes(x=temperature, y=heart.rate)) +
+  ## shape = 19: somewhat larger point
+  ## alpha = 0.25: strength of alpha blending
+  geom_point(shape=19, alpha=0.25) +
+  ## Linear regression line
+  geom_smooth(data = ICUData[-398,], method = "lm", se = FALSE) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  annotate("text", x = c(25, 25), y = c(110, 105), 
+           label = c("without patient 398", "with patient 398"), 
+           color = c("blue", "red")) +
+  ## title and axes labels
+  ggtitle("500 ICU patients") + xlab("Maximum body temperature") +
+  ylab("Maximum heart rate")
+```
+
+
+```{r}
+cor(ICUData$temperature[-398], ICUData$heart.rate[-398])
+```
+
+
+```{r}
+ggplot(ICUData[-398,], aes(x=temperature, y=heart.rate)) +
+  ## shape = 19: somewhat larger point
+  ## alpha = 0.25: strength of alpha blending
+  geom_point(shape=19, alpha=0.25) +
+  ## Linear regression line
+  geom_smooth(method = "lm", se = FALSE) +
+  ## title and axes labels
+  ggtitle("500 ICU patients") + xlab("Maximum body temperature") +
+  ylab("Maximum heart rate")
+```
+
+
+```{r}
+## Spearman's rho
+cor(ICUData$temperature, ICUData$heart.rate, method = "spearman")
+cor(ICUData$temperature[-398], ICUData$heart.rate[-398], method = "spearman")
+## Kendall's tau
+cor(ICUData$temperature, ICUData$heart.rate, method = "kendall")
+cor(ICUData$temperature[-398], ICUData$heart.rate[-398], method = "kendall")
+```
+
+
+```{r}
+cor(rank(ICUData$temperature), rank(ICUData$heart.rate))
+```
