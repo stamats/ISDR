@@ -1,0 +1,160 @@
+---
+title: "Chapter 3: Colors and Diagrams"
+author: "Matthias Kohl"
+date: "March 2021"
+output:
+  rmarkdown::html_document:
+    theme: united
+    highlight: tango
+    toc: true
+---
+
+
+```{r, eval=FALSE}
+install.packages(c("RColorBrewer", "ggsci"))
+```
+
+
+```{r}
+library(DescTools)
+library(scales)
+library(ggplot2)
+library(MKdescr)
+library(RColorBrewer)
+library(ggsci)
+```
+
+
+## 3.1 Colors
+
+```{r}
+display.brewer.all(type = "qual")
+```
+
+
+```{r}
+display.brewer.all(type = "seq")
+```
+
+
+```{r}
+display.brewer.all(type = "div")
+```
+
+
+```{r}
+## n = 5 colors of palette with name Set1
+cols <- brewer.pal(n = 5, name = "Set1")
+cols
+```
+
+
+```{r}
+rgb(red = 228, green = 26, blue = 28, maxColorValue = 255)
+```
+
+
+```{r}
+col2rgb("royalblue")
+```
+
+
+```{r, fig.width=9}
+ICUData <- read.csv(file = "ICUData.csv")
+barplot(table(ICUData$surgery), main = "Types of surgery",
+        ylab = "Absolute frequency", col = cols)
+```
+
+
+```{r, fig.width=9}
+## Define data
+ggplot(ICUData, aes(x=surgery)) +
+  ## Add bars of relative frequencies
+  geom_bar(aes(y = 100*(..count..)/sum(..count..)), width = 0.5,
+           ## Fill bars with color
+           fill = pal_npg()(5)) +
+  ## Title and label of y-axis
+  ggtitle("Types of surgery") + ylab("Relative frequency in %")
+```
+
+
+## 3.2 Excursus: Export of Diagrams
+
+```{r, eval = FALSE}
+## 1. Open the device
+## height and width in number of pixels
+png(file = "Example_Image.png", height = 640, width = 640)
+## 2. Generate the plot
+barplot(table(ICUData$surgery), main = "Type of surgery",
+        ylab = "Absolute frequency", col = cols)
+## 3. Close the device
+dev.off()
+```
+
+
+## 3.3 Diagrams
+
+```{r, fig.width=9}
+cols <- brewer.pal(n = 5, name = "Set3")
+boxplot(SAPS.II ~ surgery, data = ICUData, ylab = "SAPS II",
+        main = "SAPS II dependent on type of surgery", col = cols)
+```
+
+
+```{r, fig.width=9}
+## Define data
+ggplot(ICUData, aes(x = surgery, y = SAPS.II)) +
+  ## Box-and-whisker plot with colors
+  geom_boxplot(fill = cols) +
+  ## Labeling
+  ylab("SAPS II") + ggtitle("SAPS II dependent on type of surgery")
+```
+
+
+```{r}
+cols1 <- rev(brewer.pal(5, "Blues"))
+cols2 <- rep("#31A354", 3)
+cols3 <- brewer.pal(9, "Reds")
+hist(ICUData$temperature[-398], breaks = seq(from = 33.5, to = 42, by = 0.5),
+     main = "500 ICU patients", ylab = "Absolute frequency",
+     xlab = "Maximum body temperature", col = c(cols1, cols2, cols3))
+```
+
+
+```{r}
+ggplot(ICUData[-398,], aes(x=temperature)) +
+  geom_histogram(binwidth = 0.5, fill = c(cols1, cols2, cols3)) +
+  ylab("Absolute frequency") + xlab("Maximum body temperature") +
+  ggtitle("500 ICU patients")
+```
+
+
+```{r}
+## Generate empty vector
+colsSex <- character(nrow(ICUData))
+## Fill with colors
+colsSex[ICUData$sex == "female"] <- "#E41A1C"
+colsSex[ICUData$sex == "male"] <- "#377EB8"
+```
+
+
+```{r}
+plot(x = ICUData$temperature, y = ICUData$heart.rate, pch = 19,
+     xlab = "Maximum body temperature", ylab = "Maximum heart rate",
+     main = "500 ICU patients", col = colsSex, xlim = c(33,43))
+legend(x = "topleft", legend = c("female", "male"), pch = 19,
+       col = c("#E41A1C", "#377EB8"))
+```
+
+
+```{r, fig.width=8}
+ggplot(ICUData[-398,], aes(x=temperature, y=heart.rate, colour=sex)) +
+  ## shape = 19: somewhat larger point
+  ## alpha = 0.4: strength of blending
+  geom_point(shape=19, alpha=0.4) +
+  ## colors
+  scale_colour_manual(values = c("#E41A1C", "#377EB8")) +
+  ## labeling
+  ggtitle("500 ICU patients") + xlab("Maximum body temperature") +
+  ylab("Maximum heart frequency")
+```
