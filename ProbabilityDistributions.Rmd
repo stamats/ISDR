@@ -1,0 +1,361 @@
+---
+title: "Chapter 4: Probability Distributions"
+author: "Matthias Kohl"
+date: "March 2021"
+output:
+  rmarkdown::html_document:
+    theme: united
+    highlight: tango
+    toc: true
+---
+
+
+```{r, eval=FALSE}
+install.packages(c("distr", "distr6"))
+```
+
+
+```{r}
+library(DescTools)
+library(scales)
+library(ggplot2)
+library(MKdescr)
+library(RColorBrewer)
+library(ggsci)
+library(distr)
+library(distr6)
+```
+
+
+## 4.1 Discrete Distributions
+
+### Binomial Distribution
+
+```{r}
+## a) Exactly one defective bulb
+dbinom(1, size = 20, prob = 0.01)
+## b) No person with diabetes
+dbinom(0, size = 50, prob = 0.09)
+## b) Exactly one person with diabetes
+dbinom(1, size = 50, prob = 0.09)
+```
+
+
+```{r}
+## b) At least two persons with diabetes: 1-P(X<=1)
+1 - pbinom(1, size = 50, prob = 0.09)
+```
+
+
+```{r}
+## b) At least two persons with diabetes: P(X > 1)
+pbinom(1, size = 50, prob = 0.09, lower.tail = FALSE)
+```
+
+
+```{r}
+qbinom(0.99, size = 20, prob = 0.01)
+```
+
+
+```{r}
+pbinom(2, size = 20, prob = 0.01, lower.tail = FALSE)
+```
+
+
+```{r}
+rbinom(10, size = 50, prob = 0.09)
+```
+
+
+```{r}
+library(distr)
+X <- Binom(size = 20, prob = 0.01)
+```
+
+```{r, fig.width = 10}
+plot(X)
+```
+
+
+```{r}
+X6 <- Binomial$new(prob = 0.09, size = 50)
+```
+
+
+```{r, fig.width = 8}
+plot(X6)
+```
+
+
+```{r}
+summary(X6)
+```
+
+
+### Hypergeometric Distribution
+
+```{r}
+## a) no defective bulb
+dhyper(0, m = 5, n = 495, k = 20)
+## b) no person with diabetes
+dhyper(0, m=6000, n=60000, k = 50)
+```
+
+
+```{r}
+## b) at least one person with diabetes
+phyper(0, m=6000, n=60000, k=50, lower.tail = FALSE)
+```
+
+
+```{r}
+rhyper(10, m=6000, n=60000, k=50)
+```
+
+
+```{r, fig.width = 10}
+X <- Hyper(m=5, n=495, k=20)
+plot(X)
+```
+
+
+```{r}
+X6 <- Hypergeometric$new(size = 500, successes = 5, draws = 20)
+summary(X6)
+```
+
+
+```{r}
+## probability of 0, 1, 2, 3 defective bulbs
+## with replacement
+dbinom(0:3, size=20, prob=0.01)
+## without replacement
+dhyper(0:3, m=5, n=495, k=20)
+```
+
+
+```{r}
+0:3
+8:11
+-3:5
+```
+
+
+### Negative Binomial Distribution
+
+```{r}
+## a) 20th bulb = 1st defective bulb
+dnbinom(19, size = 1, prob = 0.01)
+## b) At most 250 persons to get 20 patients with diabetes
+pnbinom(230, size = 20, prob = 0.09)
+```
+
+
+```{r}
+qnbinom(0.95, size = 20, prob = 0.09)
+```
+
+
+```{r}
+rnbinom(10, size = 20, prob = 0.09)
+```
+
+
+```{r, fig.width = 10}
+X <- Nbinom(size = 1, prob = 0.01)
+plot(X, cex.points = 0.75)
+```
+
+
+```{r }
+X6 <- NegativeBinomial$new(size = 1, prob = 0.01)
+summary(X6)
+```
+
+
+### Poisson Distribution
+
+```{r}
+## a) no defectice bulb
+dpois(0, lambda = 1.4)
+```
+
+
+```{r}
+## a) at least one defective bulb
+ppois(0, lambda = 1.4, lower.tail = FALSE)
+## b) at least 450 new cases
+ppois(450, lambda = 495, lower.tail = FALSE)
+```
+
+
+```{r}
+qpois(0.99, lambda = 1.4)
+```
+
+
+```{r}
+ppois(5, lambda = 1.4)
+```
+
+
+```{r}
+rpois(10, lambda = 495)
+```
+
+
+```{r, fig.width = 10}
+X <- Pois(lambda = 1.4)
+plot(X)
+```
+
+
+```{r}
+X6 <- Poisson$new(rate = 1.4)
+summary(X6)
+```
+
+
+## 4.2 Continuous Distributions
+
+### Normal Distribution
+
+
+```{r}
+curve(expr = dnorm(x, mean = 167, sd = 6.0), from = 140, to = 210, n = 501,
+      col = "#E41A1C", xlab = "Body height in cm", ylab = "Density",
+      main = "Body height of German men and women")
+curve(expr = dnorm(x, mean = 180, sd = 6.5), from = 140, to = 210, n = 501,
+      add = TRUE, col = "#377EB8")
+legend("topleft", legend = c("women", "men"), fill = c("#E41A1C", "#377EB8"))
+```
+
+
+```{r}
+pnorm(175, mean = 167, sd = 6.0, lower.tail = FALSE)
+```
+
+
+```{r}
+qnorm(0.95, mean = 180, sd = 6.5)
+```
+
+
+```{r, fig.width = 10}
+X <- Norm(mean = 100, sd = 15)
+plot(X)
+```
+
+
+```{r}
+X6 <- Normal$new(mean = 100, sd = 15)
+summary(X6)
+```
+
+
+### Log-normal Distribution
+
+```{r, fig.width = 10}
+X <- Lnorm(meanlog = 0.063, sdlog = 0.7)
+plot(X)
+```
+
+
+```{r}
+X6 <- Lognormal$new(meanlog = 0.063, sdlog = 0.7)
+summary(X6)
+```
+
+### Gamma Distribution
+
+```{r, fig.width = 10}
+X <- Exp(rate = 0.34657)
+plot(X)
+```
+
+
+```{r}
+X6 <- Exponential$new(rate = 0.34657)
+summary(X6)
+```
+
+
+```{r}
+pexp(1, rate = 0.34657)
+```
+
+
+```{r}
+qexp(0.99, rate = 0.34657)
+```
+
+
+```{r}
+curve(dgamma(x, scale = 5, shape = 1.8), from = 0, to = 30, n = 501,
+      xlab = "Hospital length of stay in days", ylab = "Density",
+      main = "A selected DRG")
+```
+
+
+```{r}
+X6 <- Gamma$new(shape = 1.8, scale = 5)
+summary(X6)
+```
+
+
+```{r}
+pgamma(10, scale = 5, shape = 1.8, lower.tail = FALSE)
+```
+
+
+```{r}
+qgamma(0.99, scale = 5, shape = 1.8)
+```
+
+
+### Weibull Distribution
+
+```{r}
+curve(dweibull(x, scale = 1/0.34657, shape = 2.12), from = 0, to = 30, n = 501,
+      xlab = "Life expectancy in years", ylab = "Density",
+      main = "Life expectancy of a smart phone battery including aging")
+```
+
+
+```{r}
+X6 <- distr6::Weibull$new(shape = 2.12, scale = 1/0.34657)
+summary(X6)
+```
+
+
+```{r}
+pweibull(1, scale = 1/0.34657, shape = 2.12)
+```
+
+
+```{r}
+qweibull(0.99, scale = 1/0.34657, shape = 2.12)
+```
+
+
+```{r, fig.width = 10}
+X <- Weibull(scale = 5.5, shape = 2)
+plot(X)
+```
+
+
+```{r}
+X6 <- distr6::Weibull$new(shape = 2, scale = 5.5)
+summary(X6)
+```
+
+
+```{r}
+qweibull(0.5, scale = 5.5, shape = 2)
+```
+
+
+```{r}
+pweibull(11, scale = 5.5, shape = 2, lower.tail = FALSE)
+```
