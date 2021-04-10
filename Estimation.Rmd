@@ -1,0 +1,547 @@
+---
+title: "Chapter 5: Estimation"
+author: "Matthias Kohl"
+date: "April 2021"
+output:
+  rmarkdown::html_document:
+    theme: united
+    highlight: tango
+    toc: true
+---
+
+
+```{r, eval=FALSE}
+install.packages("BiocManager")
+BiocManager::install("Biobase", update = FALSE)
+```
+
+
+```{r, eval=FALSE}
+install.packages(c("distrMod", "qqplotr", "RobLox", "MKinfer", 
+                   "ROptEst", "RobExtremes", "MKpower", "MKclass"))
+```
+
+
+```{r}
+library(DescTools)
+library(scales)
+library(ggplot2)
+library(MKdescr)
+library(RColorBrewer)
+library(ggsci)
+library(distr)
+library(distr6)
+library(distrMod)
+library(qqplotr)
+library(RobLox)
+library(MKinfer)
+library(ROptEst)
+library(RobExtremes)
+library(MKpower)
+library(MKclass)
+library(MASS)
+library(boot)
+```
+
+
+## 5.1 Introduction
+
+## 5.2 Point Estimation
+
+```{r}
+ICUData <- read.csv(file = "ICUData.csv")
+## unbiased and efficient
+table(ICUData$liver.failure)/nrow(ICUData)
+```
+
+
+```{r}
+## unbiased and efficient
+mean(ICUData$temperature[-398])
+## unbiased
+sd(ICUData$temperature[-398])
+```
+
+
+```{r}
+pnorm(10, mean = 37.7, sd = 1.2)
+```
+
+
+```{r}
+library(MASS)
+fitdistr(ICUData$temperature[-398], densfun = "normal")
+```
+
+
+```{r}
+## Change output options
+distrModOptions(show.details = "minimal")
+## Define probability model
+model <- NormLocationScaleFamily()
+## Estimate parameters by ML
+MLEstimator(ICUData$temperature[-398], model)
+```
+
+
+```{r}
+hist(ICUData$temperature[-398], breaks = seq(from = 33, to = 42, by = 0.5),
+     main = "Maximum body temperature", ylab = "Density", freq = FALSE)
+lines(density(ICUData$temperature[-398]))
+curve(dnorm(x, mean = 37.7, sd = 1.2), col = "darkred", from = 33, to = 42,
+      n = 501, add = TRUE, lwd = 2)
+legend("topright", fill = "darkred", legend = "Estimated model")
+```
+
+
+```{r}
+ggplot(ICUData[-398,], aes(x=temperature)) +
+  geom_histogram(aes(y=..density..), binwidth = 0.5, fill = "darkgrey") +
+  geom_density(color = "orange") + ylab("Density") +
+  stat_function(fun = dnorm, args = list(mean = 37.7, sd = 1.2),
+                color = "darkred", lwd = 2) +
+  annotate("text", x = 40, y = 0.31, col = "darkred",
+           label = "Estimated model") +
+  ggtitle("Maximum body temperature")
+```
+
+
+```{r}
+ggplot(ICUData[-398,], aes(sample = temperature)) + 
+  qqplotr::stat_pp_band(dparams = list(mean = 37.7, sd = 1.2)) + 
+  qqplotr::stat_pp_point(dparams = list(mean = 37.7, sd = 1.2)) + 
+  qqplotr::stat_pp_line() + 
+  xlab("Cumulative distribution of the model") + 
+  ylab("Observed cumulative probability") + 
+  ggtitle("pp-Plot for Norm(37.7, 1.2)")
+```
+
+
+```{r}
+qqnorm(ICUData$temperature[-398], main = "qq-Plot for Normal Distribution",
+       ylab = "Maximum body temperature")
+qqline(ICUData$temperature[-398])
+```
+
+
+```{r}
+ggplot(ICUData[-398,], aes(sample = temperature)) + 
+  stat_qq() + ggplot2::stat_qq_line() +
+  xlab("Theoretical Quantiles") + 
+  ylab("Observed Maximal Body Temperature") + 
+  ggtitle("qq-Plot for Normal Distribution")
+```
+
+
+```{r}
+ggplot(ICUData[-398,], aes(sample = temperature)) + 
+  stat_qq(dparams = list(mean = 37.7, sd = 1.2)) + 
+  ggplot2::stat_qq_line(dparams = list(mean = 37.7, sd = 1.2)) +
+  geom_abline(slope = 1, color = "blue") +
+  xlab("Model for maximal body temperature") + 
+  ylab("Observed maximal body temperature") + 
+  ggtitle("qq-Plot for Norm(37.7, 1.2)")
+```
+
+
+```{r}
+qqplot(ICUData$temperature[-398], Norm(mean = 37.7, sd = 1.2),
+       xlab = "Maximal body temperature",
+       main = "qq-Plot for Norm(37.7, 1.2)")
+```
+
+
+```{r}
+ggplot(ICUData[-398,], aes(sample = temperature)) + 
+  qqplotr::stat_qq_band(dparams = list(mean = 37.7, sd = 1.2), identity = TRUE) + 
+  qqplotr::stat_qq_point(dparams = list(mean = 37.7, sd = 1.2)) + 
+  qqplotr::stat_qq_line(dparams = list(mean = 37.7, sd = 1.2), identity = TRUE) + 
+  xlab("Model for maximal body temperature") + 
+  ylab("Observed maixmal body temperature") + 
+  ggtitle("qq-Plot for Norm(37.7, 1.2)")
+```
+
+
+```{r, fig.height=10, fig.width=10}
+par(mfrow=c(3,3))
+for(i in 1:9){
+  x <- rnorm(499)
+  qqnorm(x)
+  qqline(x)
+}
+```
+
+
+```{r}
+median(ICUData$temperature)
+mad(ICUData$temperature)
+sIQR(ICUData$temperature)
+```
+
+
+```{r}
+Model <- NormLocationScaleFamily()
+CvMMDEstimator(ICUData$temperature[-398], Model)
+```
+
+
+```{r}
+KolmogorovMDEstimator(ICUData$temperature[-398], Model)
+```
+
+
+```{r}
+## ML estimator
+MLEstimator(ICUData$temperature, Model)
+## CvM-MD estimator
+CvMMDEstimator(ICUData$temperature, Model)
+## KS-MD estimator
+KolmogorovMDEstimator(ICUData$temperature, Model)
+```
+
+
+```{r}
+roblox(ICUData$temperature, eps.lower = 1/500, eps.upper = 0.05, k = 3)
+```
+
+
+```{r}
+path.package("ROptEst")
+```
+
+
+```{r}
+qnorm(0.95)
+```
+
+
+```{r}
+pnorm(3.3)
+```
+
+```{r}
+Bili <- round(ICUData$bilirubin, 1)
+```
+
+
+```{r}
+quantile(Bili[ICUData$liver.failure == 0], probs = 0.95)
+perfMeasures(pred = Bili, truth = ICUData$liver.failure, 
+             namePos = 1, cutoff = 49.615, measures = c("SENS", "SPEC"))
+```
+
+
+```{r}
+mean(log(Bili[ICUData$liver.failure == 0]))
+sd(log(Bili[ICUData$liver.failure == 0]))
+qlnorm(0.95, meanlog = 2.774, sdlog = 0.604)
+perfMeasures(pred = Bili, truth = ICUData$liver.failure, 
+             namePos = 1, cutoff = 43.27, measures = c("SENS", "SPEC"))
+```
+
+
+```{r}
+optCutoff(pred = Bili, truth = ICUData$liver.failure, namePos = 1)
+optCutoff(pred = Bili, truth = ICUData$liver.failure, 
+          namePos = 1, perfMeasure = "BACC")
+perfMeasures(pred = Bili, truth = ICUData$liver.failure, 
+             namePos = 1, cutoff = 28.4, measures = c("SENS", "SPEC"))
+```
+
+
+```{r}
+B <- 1000
+n0 <- sum(ICUData$liver.failure == 0)
+ind0 <- which(ICUData$liver.failure == 0)
+n1 <- sum(ICUData$liver.failure == 1)
+ind1 <- which(ICUData$liver.failure == 1)
+cutoffs <- numeric(B)
+for(i in 1:B){
+  selection0 <- sample(ind0, n0, replace = TRUE)
+  selection1 <- sample(ind1, n1, replace = TRUE)
+  BS.data <- ICUData[c(selection0, selection1),]
+  cutoffs[i] <- optCutoff(pred = round(BS.data$bilirubin, 1), 
+                          truth = BS.data$liver.failure, 
+                          namePos = 1)[1]
+}
+summary(cutoffs)
+```
+
+
+```{r}
+perfMeasures(pred = Bili, truth = ICUData$liver.failure, 
+             namePos = 1, cutoff = mean(cutoffs), 
+             measures = c("SENS", "SPEC"))
+```
+
+
+```{r}
+## More emphasis on sensitivity.
+optCutoff(pred = Bili, truth = ICUData$liver.failure, 
+          namePos = 1, perfMeasure = "WACC", wACC = 0.75)
+perfMeasures(pred = Bili, truth = ICUData$liver.failure, 
+             namePos = 1, cutoff = 17.7, measures = c("SENS", "SPEC"))
+## More weight on specificity
+optCutoff(pred = Bili, truth = ICUData$liver.failure, 
+          namePos = 1, perfMeasure = "WACC", wACC = 0.25)
+perfMeasures(pred = Bili, truth = ICUData$liver.failure, 
+             namePos = 1, cutoff = 53.3, measures = c("SENS", "SPEC"))
+```
+
+
+```{r}
+stump <- decisionStump(pred = Bili, truth = ICUData$liver.failure, 
+                       namePos = 1)
+stump
+```
+
+
+```{r }
+predict(stump, newdata = c(4.3, 10.1, 17.4, 28.4, 28.5, 71.0, 93.1))
+```
+
+
+```{r}
+perfScores(pred = Bili, truth = ICUData$liver.failure, namePos = 1, 
+           scores = "AUC")
+perfScores(pred = Bili, truth = ICUData$liver.failure, namePos = 1, 
+           scores = c("AUC", "BS"), transform = TRUE)
+```
+
+
+## 5.3 Confidence Intervals
+
+```{r}
+meanCI(ICUData$temperature[-398])
+```
+
+
+```{r}
+t.test(ICUData$temperature[-398])$conf.int
+```
+
+
+```{r}
+qt(1-0.05/2, df = 499-1)
+qnorm(1-0.05/2)
+```
+
+
+```{r}
+## ML estimator
+ML <- fitdistr(ICUData$temperature[-398], densfun = "normal")
+## Approximate confidence interval.
+confint(ML)
+```
+
+
+```{r}
+## Model
+Model <- NormLocationScaleFamily()
+## ML-Sch?ter
+ML2 <- MLEstimator(ICUData$temperature[-398], Model)
+## Approximate confidence interval
+confint(ML2)
+```
+
+
+```{r}
+## standard deviation only
+sdCI(ICUData$temperature[-398])
+## mean value and standard deviation
+normCI(ICUData$temperature[-398])
+```
+
+
+```{r}
+normCI(ICUData$temperature[-398], boot = TRUE)
+```
+
+
+```{r}
+## Frequency of liver failure
+table(ICUData$liver.failure)
+## Wilson interval
+binomCI(x = 20, n = 500)
+## Clopper-Pearson interval
+binomCI(x = 20, n = 500, method = "clopper-pearson")
+## Agresti-Coull interval
+binomCI(x = 20, n = 500, method = "agresti-coull")
+```
+
+
+```{r }
+## without continuity correction
+binomCI(x = 20, n = 500, method = "wald")
+## with continuity correction
+binomCI(x = 20, n = 500, method = "wald-cc")
+```
+
+
+```{r}
+binomCI(x = 20, n = 500, method = "boot")
+```
+
+
+```{r}
+## Bernoulli model
+Model <- BinomFamily(size = 1)
+## ML Estimator
+MLp <- MLEstimator(ICUData$liver.failure, Model)
+MLp
+## confidence interval
+confint(MLp)
+```
+
+
+```{r}
+## Exact confidence interval for the median.
+medianCI(ICUData$temperature)
+## Exact confidence interval for the MAD
+madCI(ICUData$temperature)
+```
+
+
+```{r}
+## Asymptotic confidence interval for the median.
+medianCI(ICUData$temperature, method = "asymptotic")
+## Asymptotic confidence interval for the MAD
+madCI(ICUData$temperature, method = "asymptotic")
+```
+
+
+```{r}
+## bootstrap confidence interval for the median.
+medianCI(ICUData$temperature, method = "boot")
+## bootstrap confidence interval for the MAD.
+madCI(ICUData$temperature, method = "boot")
+```
+
+
+```{r}
+## Model
+Model <- NormLocationScaleFamily()
+## CvM-MD estimator including variance.
+MD <- CvMMDEstimator(ICUData$temperature, Model)
+## 95% confidence interval
+confint(MD)
+```
+
+
+```{r}
+## Model
+Model <- BinomFamily(size = 1)
+## CvM-MD estimator incl. variance.
+MDp <- CvMMDEstimator(ICUData$liver.failure, Model)
+## 95% confidence interval
+confint(MDp)
+```
+
+
+```{r}
+## x: Vector of observations
+## i: vector of indices of bootstrap sample.
+KSMDEst <- function(x, i){
+  estimate(KolmogorovMDEstimator(x[i], ParamFamily = BinomFamily(size = 1)))
+}
+```
+
+
+```{r}
+## bootstrap estimates
+boot.out <- boot(ICUData$liver.failure, statistic = KSMDEst, R = 999)
+## bootstrap confidence intervals
+boot.ci(boot.out)
+```
+
+
+```{r}
+ALest <- roblox(ICUData$temperature, eps.lower = 1/500, 
+                eps.upper = 0.05, k = 3)
+confint(ALest)
+```
+
+
+```{r}
+confint(ALest, symmetricBias())
+```
+
+
+```{r}
+## x: Vector of observations
+## i: vector of indices of bootstrap sample.
+RMXEst <- function(x, i){
+  res <- roblox(x[i], eps.lower = 1/500, eps.upper = 0.05, k = 3)
+  c(estimate(res), diag(asvar(res)))
+}
+```
+
+
+```{r}
+## bootstrap estimates
+boot.out <- boot(ICUData$temperature, statistic = RMXEst, R = 999)
+## bootstrap confidence interval for the mean value.
+boot.ci(boot.out, index = c(1,3))
+## bootstrap confidence interval for the standard deviation
+boot.ci(boot.out, index = c(2,4))
+```
+
+
+```{r}
+Model <- BinomFamily(size = 1)
+ALest <- roptest(ICUData$liver.failure, Model,
+                 eps.lower = 0, eps.upper = 0.02, steps = 3)
+confint(ALest)
+confint(ALest, symmetricBias())
+```
+
+
+```{r}
+qnorm(0.975)
+```
+
+
+```{r}
+## Values for p
+p <- seq(from = 0.01, to = 0.99, length = 100)
+## standard deviation
+SD <- sqrt(p*(1-p))
+## Graphical representation
+DF <- data.frame(p, SD)
+ggplot(DF, aes(x = p, y = SD)) + geom_line() + 
+  ylab(expression(sqrt(p*(1-p)))) + 
+  xlab("p") + ggtitle("Standard deviation of Bernoulli(p)")
+```
+
+
+```{r, fig.width = 8}
+## sample size
+n <- seq(60, 10000, by = 20)
+## Maximum estimation error
+maxError <- 97.5/sqrt(n)
+## Graphical representation
+DF <- data.frame(n, maxError)
+ggplot(DF, aes(x = n, y = maxError)) + geom_line() + ylab("Percent [%]") + 
+  xlab("Sample size") + ggtitle("Maximum estimation error")
+```
+
+
+```{r}
+## without continuity correction
+ssize.propCI(0.5, width = 0.062, method = "wald")
+## with continuity correction
+ssize.propCI(0.5, width = 0.062, method = "wald-cc")
+## Clopper-Pearson
+ssize.propCI(0.5, width = 0.062, method = "clopper-pearson")
+## Agresti-Coull
+ssize.propCI(0.5, width = 0.062, method = "agresti-coull")
+```
+
+
+```{r}
+## without continuity correction
+ssize.propCI(0.5, width = 0.0088, method = "wald")
+## with continuity correction
+ssize.propCI(0.5, width = 0.0088, method = "wald-cc")
+```
+
