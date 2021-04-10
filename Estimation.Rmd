@@ -69,7 +69,6 @@ pnorm(10, mean = 37.7, sd = 1.2)
 
 
 ```{r}
-library(MASS)
 fitdistr(ICUData$temperature[-398], densfun = "normal")
 ```
 
