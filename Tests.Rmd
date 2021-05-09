@@ -90,7 +90,7 @@ t.test(X1, X2, var.equal = TRUE)
 ```
 
 
-## 6.2 Nominal features
+## 6.2 Nominal variables
 
 ```{r}
 ICUData <- read.csv(file = "ICUData.csv", fileEncoding = "utf8")
@@ -239,7 +239,7 @@ cmh_test(as.table(Rabbits), distribution = "approximate")
 ```
 
 
-## 6.3 Ordinal and quantitative features
+## 6.3 Ordinal and quantitative variables
 
 ```{r}
 t.test(ICUData$temperature[-398], mu = 37.5, alternative = "greater")
