@@ -1,0 +1,606 @@
+---
+title: "Chapter 6: Statistical Tests"
+author: "Matthias Kohl"
+date: "May 2021"
+output:
+  rmarkdown::html_document:
+    theme: united
+    highlight: tango
+    toc: true
+---
+
+```{r, eval=FALSE}
+BiocManager::install("mixOmics", update = FALSE)
+install.packages(c("RVAideMemoire", "coin", "exactRankTests", 
+                   "ggpubr", "datarium", "gridExtra", "NSM3"))
+```
+
+
+```{r}
+library(DescTools)
+library(scales)
+library(ggplot2)
+library(MKdescr)
+library(RColorBrewer)
+library(ggsci)
+library(distr)
+library(distr6)
+library(distrMod)
+library(qqplotr)
+library(RobLox)
+library(MKinfer)
+library(ROptEst)
+library(RobExtremes)
+library(MKpower)
+library(MKclass)
+library(MASS)
+library(boot)
+library(RVAideMemoire)
+library(coin)
+library(exactRankTests)
+library(ggpubr)
+library(datarium)
+library(gridExtra)
+library(NSM3)
+```
+
+
+## 6.1 Introduction
+
+```{r}
+power.t.test(delta = 1, sd = 1, sig.level = 0.05, power = 0.8)
+```
+
+
+```{r}
+power.t.test(n = 20, delta = 1, sd = 1, sig.level = 0.05)
+```
+
+
+```{r}
+qt(0.975, df = 38)
+```
+
+
+```{r}
+## random numbers for demonstration
+X1 <- rnorm(n = 20, mean = 0.5, sd = 1)
+X2 <- rnorm(n = 20, mean = 1.5, sd = 1)
+```
+
+
+```{r}
+t.test(X1, X2, var.equal = TRUE)$statistic
+```
+
+
+```{r}
+2*pt(abs(t.test(X1, X2, var.equal = TRUE)$statistic), df = 38, 
+     lower.tail = FALSE)
+```
+
+
+```{r}
+t.test(X1, X2, var.equal = TRUE)$p.value
+```
+
+
+```{r}
+t.test(X1, X2, var.equal = TRUE)
+```
+
+
+## 6.2 Nominal features
+
+```{r}
+ICUData <- read.csv(file = "ICUData.csv", fileEncoding = "utf8")
+table(ICUData$liver.failure)
+## exact test
+binom.test(20, 500, p = 0.05, alternative = "less")
+## asymptotic test with continuity correction
+prop.test(20, 500, p = 0.05, alternative = "less")
+## asymptotic test without continuity correction
+prop.test(20, 500, p = 0.05, alternative = "less", correct = FALSE)
+```
+
+
+```{r, cache=TRUE}
+binomCI(20, 500, method = "boot", alternative = "less")
+```
+
+
+```{r}
+## exact test
+binom.test(20, 500, p = 0.06, alternative = "less")
+```
+
+
+```{r, cache=TRUE}
+table(ICUData$outcome)
+## takes quite a long time to compute
+multinomial.test(as.vector(table(ICUData$outcome)), 
+                 p = c(0.10, 0.30, 0.20, 0.40))
+```
+
+
+```{r}
+## 2x2 contingency table
+cont.table <- table(ICUData$sex, ICUData$liver.failure)
+cont.table
+prop.test(c(7, 13), c(175, 325))
+```
+
+
+```{r }
+binomDiffCI(a = 7, b = 13, c = 168, d = 312)
+```
+
+
+```{r, cache=TRUE}
+binomDiffCI(a = 7, b = 13, c = 168, d = 312, method = "boot")
+```
+
+
+```{r}
+## Fisher's exact test
+fisher.test(cont.table)
+## chi^2 test
+chisq.test(cont.table)
+```
+
+
+```{r}
+chisq_test(cont.table, distribution = "approximate")
+```
+
+
+```{r}
+CramerV(x = cont.table, conf.level = 0.95, method = "fisheradj")
+```
+
+
+```{r}
+cramer.test(cont.table)
+```
+
+
+```{r}
+cont.table <- table(ICUData$surgery, ICUData$outcome)
+cont.table
+## Fisher's exact test
+fisher.test(cont.table, simulate.p.value = TRUE, B = 1e5)
+## chi^2 test
+chisq.test(cont.table)
+chisq_test(cont.table, distribution = "approximate")
+CramerV(x = cont.table, conf.level = 0.95)
+cramer.test(cont.table)
+```
+
+
+```{r}
+fisher.multcomp(cont.table, p.method = "holm")
+```
+
+
+```{r}
+Performance <- matrix(c(794, 86, 150, 570), nrow = 2, 
+                  dimnames = list("First" = c("Approve", "Disapprove"),
+                                  "Second" = c("Approve", "Disapprove")))
+Performance
+```
+
+
+```{r}
+mcnemar.test(Performance)
+```
+
+
+```{r}
+mh_test(as.table(Performance), distribution = "exact")
+mh_test(as.table(Performance))
+mh_test(as.table(Performance), distribution = "approximate")
+```
+
+
+```{r}
+binomDiffCI(a = 794, b = 150, c = 86, d = 570, paired = TRUE)
+```
+
+
+```{r, cache=TRUE}
+binomDiffCI(a = 794, b = 150, c = 86, d = 570, paired = TRUE, method = "boot")
+```
+
+
+```{r}
+Rabbits <- array(c(0, 0, 6, 5,
+                   3, 0, 3, 6,
+                   6, 2, 0, 4,
+                   5, 6, 1, 0,
+                   2, 5, 0, 0), dim = c(2, 2, 5),
+                 dimnames = list(Delay = c("None", "1.5h"),
+                                 Response = c("Cured", "Died"),
+                                 Penicillin.Level = c("1/8", "1/4", "1/2", 
+                                                      "1", "4")))
+Rabbits
+```
+
+
+```{r}
+mantelhaen.test(Rabbits)
+mantelhaen.test(Rabbits, exact = TRUE)
+```
+
+
+```{r }
+cmh_test(as.table(Rabbits))
+cmh_test(as.table(Rabbits), distribution = "exact")
+cmh_test(as.table(Rabbits), distribution = "approximate")
+```
+
+
+## 6.3 Ordinal and quantitative features
+
+```{r}
+t.test(ICUData$temperature[-398], mu = 37.5, alternative = "greater")
+```
+
+
+```{r}
+t.test(ICUData$temperature, mu = 37.5, alternative = "greater")
+```
+
+```{r}
+wilcox.test(ICUData$temperature, mu = 37.5, alternative = "greater",
+            conf.int = TRUE)
+```
+
+
+```{r}
+wilcox.test(ICUData$temperature[-398], mu = 37.5, alternative = "greater",
+            conf.int = TRUE)
+```
+
+
+```{r}
+data(sleep)
+t.test(sleep$extra[1:10], mu = 0)
+t.test(sleep$extra[11:20], mu = 0)
+```
+
+
+```{r}
+t.test(sleep$extra[1:10], sleep$extra[11:20], paired = TRUE)
+```
+
+
+```{r}
+t.test(sleep$extra[1:10]-sleep$extra[11:20])
+```
+
+
+```{r}
+wilcox.test(sleep$extra[1:10], sleep$extra[11:20], paired = TRUE, 
+            conf.int = TRUE)
+```
+
+
+```{r}
+wilcox.exact(sleep$extra[1:10], sleep$extra[11:20], paired = TRUE, 
+             conf.int = TRUE)
+```
+
+
+```{r}
+## females
+sd(ICUData$temperature[ICUData$sex == "female"])
+## males
+sd(ICUData$temperature[ICUData$sex == "male"])
+```
+
+
+```{r}
+## males without patient 398
+sd(ICUData$temperature[-398][ICUData$sex[-398] == "male"])
+```
+
+
+```{r}
+## with patient 398
+t.test(temperature ~ sex, data = ICUData)
+## without patient 398
+t.test(temperature ~ sex, data = ICUData[-398,])
+```
+
+
+```{r}
+hsu.t.test(temperature ~ sex, data = ICUData[-398,])
+MKinfer::perm.t.test(temperature ~ sex, data = ICUData[-398,])
+boot.t.test(temperature ~ sex, data = ICUData[-398,])
+```
+
+
+```{r}
+AM <- tapply(ICUData$temperature[-398], ICUData$sex[-398], mean)
+CI <- tapply(ICUData$temperature[-398], ICUData$sex[-398], meanCI)
+n <- tapply(ICUData$temperature[-398], ICUData$sex[-398], length)
+DF <- data.frame(AM = AM, 
+                 CI.lo = c(CI$male$conf.int[1], 
+                           CI$female$conf.int[1]),
+                 CI.up = c(CI$male$conf.int[2], 
+                           CI$female$conf.int[2]),
+                 sex = c("male", "female"),
+                 n = n)
+DF$sex <- factor(DF$sex, levels = c("female", "male"))
+DF
+```
+
+
+```{r}
+ggplot(DF, aes(x = sex, y = AM, color = sex)) +
+  scale_color_nejm() + geom_point() + geom_hline(yintercept = 37.5) +
+  geom_errorbar(aes(ymin = CI.lo, ymax = CI.up), width = 0.2) + 
+  geom_text(aes(y = c(37.3, 37.3), label = paste("n =", n))) +
+  annotate(geom = "text", x = 1.5, y = 37.95, 
+           label = "Welch t-test, p-value = 0.211") +
+  ylab("Maximum body temperature [°C]") + ylim(37.0, 38.0)
+```
+
+
+```{r}
+## without patient 398
+wilcox.test(temperature ~ sex, data = ICUData[-398,],
+            conf.int = TRUE)
+## with patient 398
+wilcox.test(temperature ~ sex, data = ICUData, conf.int = TRUE)
+wilcox_test(temperature ~ factor(sex), data = ICUData, conf.int = TRUE,
+            distribution = "approximate")
+wilcox.exact(temperature ~ sex, data = ICUData, conf.int = TRUE)
+```
+
+
+```{r}
+ggplot(data = ICUData, aes(x = factor(sex, levels = c("female", "male")), 
+                            y = temperature, 
+                            fill = factor(sex, levels = c("female", "male")))) +
+  geom_hline(yintercept = 37.5) + scale_fill_nejm(name = "sex") +
+  geom_boxplot() + stat_compare_means(label.y = 42.4, label.x = 1.35) + 
+  ylab("Maximum body temperature [?C]") + ylim(32, 42.5) + 
+  annotate(geom = "text", x = c(1, 2), y = c(32.7, 32.7), 
+           label = c("n = 175", "n = 325"), color = pal_nejm()(2)) +
+  xlab("sex")
+```
+
+
+```{r}
+## with patient 398, classical
+oneway.test(temperature ~ outcome, data = ICUData, var.equal = TRUE)
+## with patient 398, Welch
+oneway.test(temperature ~ outcome, data = ICUData)
+## without patient 398, classical
+oneway.test(temperature ~ outcome, data = ICUData[-398,], var.equal = TRUE)
+## without patient 398, Welch
+oneway.test(temperature ~ outcome, data = ICUData[-398,])
+```
+
+
+```{r}
+## with patient 398
+kruskal.test(temperature ~ outcome, data = ICUData)
+## without patient 398
+kruskal.test(temperature ~ outcome, data = ICUData[-398,])
+```
+
+
+```{r}
+kruskal_test(temperature ~ factor(outcome), data = ICUData, 
+             distribution = "approximate")
+```
+
+
+```{r}
+## pairwise Welch t-tests without patient 398
+pairwise.t.test(ICUData$temperature[-398], ICUData$outcome[-398],
+                pool.sd = FALSE)
+## pairwise Wilcoxon-Mann-Whitney U tests
+pairwise.wilcox.test(ICUData$temperature, ICUData$outcome)
+```
+
+
+```{r}
+## Mean values and SDs
+tapply(ICUData$temperature[-398], ICUData$outcome[-398], mean)
+tapply(ICUData$temperature[-398], ICUData$outcome[-398], sd)
+## Hodges-Lehmann estimator
+pairwise.fun(ICUData$temperature[-398], ICUData$outcome[-398], 
+             function(x, y) wilcox.test(x, y, conf.int = TRUE)$estimate)
+```
+
+
+```{r}
+AM <- tapply(ICUData$temperature[-398], ICUData$outcome[-398], mean)
+CI <- tapply(ICUData$temperature[-398], ICUData$outcome[-398], meanCI)
+n <- tapply(ICUData$temperature[-398], ICUData$outcome[-398], length)
+DF <- data.frame(AM = AM, 
+                 CI.lo = c(CI$`other hospital`$conf.int[1], 
+                           CI$`home`$conf.int[1],
+                           CI$`secondary care/rehab`$conf.int[1],
+                           CI$died$conf.int[1]),
+                 CI.up = c(CI$`other hospital`$conf.int[2], 
+                           CI$`home`$conf.int[2],
+                           CI$`secondary care/rehab`$conf.int[2],
+                           CI$died$conf.int[2]),
+                 outcome = names(CI),
+                 n = n)
+DF$outcome <- factor(DF$outcome, levels = c("home", "secondary care/rehab",
+                                            "other hospital", "died"))
+DF
+```
+
+
+```{r}
+ggplot(DF, aes(x = outcome, y = AM, color = outcome)) +
+  scale_color_npg() + geom_point() + geom_hline(yintercept = 37.5) +
+  geom_errorbar(aes(ymin = CI.lo, ymax = CI.up), width = 0.2) + 
+  geom_text(aes(y = rep(37.1, 4), label = paste("n =", n))) +
+  annotate(geom = "text", x = 2.5, y = 38.4, 
+           label = "Welch 1-way ANOVA, p-value = 0.001") +
+  ylab("Maximum body temperature [°C]") + ylim(37.0, 38.5)
+```
+
+
+```{r}
+ICUtmp <- ICUData[,c("outcome", "temperature")]
+ICUtmp$outcome <- factor(ICUtmp$outcome, levels = c("home", 
+                                                    "secondary care/rehab",
+                                                    "other hospital", 
+                                                    "died"))
+ggplot(data=ICUtmp, aes(x=outcome, y=temperature, fill=outcome)) +
+  geom_hline(yintercept = 37.5) + geom_boxplot() + 
+  stat_compare_means(label.y = 43, label.x = 2.0) +
+  ggtitle("Maximum body temperature dependent on outcome") +
+  ylim(c(33, 43))
+```
+
+
+```{r}
+data(selfesteem)
+selfesteem
+```
+
+
+```{r}
+SE.long <- data.frame(id = rep(selfesteem$id, 3),
+                      score = c(selfesteem$t1, selfesteem$t2, 
+                                selfesteem$t3),
+                      time = rep(c("t1", "t2", "t3"), each = 10))
+head(SE.long)
+tail(SE.long)
+```
+
+
+```{r}
+## Classic repeated-measures 1-way ANOVA
+rm.oneway.test(x = SE.long$score, g = SE.long$time, id = SE.long$id)
+## Mixed-effects 1-way ANOVA
+rm.oneway.test(x = SE.long$score, g = SE.long$time, id = SE.long$id, 
+               method = "lme")
+## Quade test
+rm.oneway.test(x = SE.long$score, g = SE.long$time, id = SE.long$id,
+               method = "quade")
+## Friedman test
+rm.oneway.test(x = SE.long$score, g = SE.long$time, id = SE.long$id,
+               method = "friedman")
+```
+
+
+```{r}
+## Pairwise paired t-tests.
+pairwise.t.test(SE.long$score, SE.long$time, paired = TRUE)
+## Pairwise Wilcoxon signed rank tests.
+pairwise.wilcox.test(SE.long$score, SE.long$time, paired = TRUE)
+```
+
+
+```{r}
+## arithmetic means
+pairwise.fun(SE.long$score, SE.long$time, function(x, y) mean(x-y))
+## SDs
+pairwise.fun(SE.long$score, SE.long$time, function(x, y) sd(x-y))
+## medians
+pairwise.fun(SE.long$score, SE.long$time, function(x, y) median(x-y))
+```
+
+
+```{r}
+gg1 <- ggpaired(data = selfesteem, cond1 = "t1", cond2 = "t2", 
+         fill = "condition") + ylim(1, 10.5) +
+  scale_fill_manual(values = pal_jama()(3)[1:2]) +
+  annotate(geom = "text", x = 1.5, y = 10.5, 
+           label = "Wilcoxon signed rank test, adj. p = 0.006") +
+  annotate(geom = "text", x = 1.5, y = 10, 
+           label = "Paired t-test, adj. p = 0.002")
+gg2 <- ggpaired(data = selfesteem, cond1 = "t1", cond2 = "t3", 
+         fill = "condition") + ylim(1, 10.5) +
+  scale_fill_manual(values = pal_jama()(3)[c(1,3)]) + 
+  annotate(geom = "text", x = 1.5, y = 10.5, 
+           label = "Wilcoxon signed rank test, adj. p = 0.006") +
+  annotate(geom = "text", x = 1.5, y = 10, 
+           label = "Paired t-test, adj. p < 0.001")
+gg3 <- ggpaired(data = selfesteem, cond1 = "t2", cond2 = "t3", 
+         fill = "condition") + ylim(1, 10.5) +
+  scale_fill_manual(values = pal_jama()(3)[c(2,3)]) + 
+  annotate(geom = "text", x = 1.5, y = 10.5, 
+           label = "Wilcoxon signed rank test, adj. p = 0.006") +
+  annotate(geom = "text", x = 1.5, y = 10, 
+           label = "Paired t-test, adj. p = 0.002")
+grid.arrange(gg1, gg2, gg3, nrow = 1)
+```
+
+
+```{r}
+## with patient 398
+var.test(temperature ~ sex, data = ICUData)
+## without patient 398
+var.test(temperature ~ sex, data = ICUData[-398,])
+```
+
+
+```{r}
+ICUtmp <- ICUData[,c("temperature", "sex")]
+tapply(ICUtmp$temperature, ICUtmp$sex, median)
+male <- ICUtmp$sex == "male"
+ICUtmp$temperature[male] <- ICUtmp$temperature[male] - 37.8
+ICUtmp$temperature[!male] <- ICUtmp$temperature[!male] - 37.5
+ansari.test(temperature ~ sex, data = ICUtmp, conf.int = TRUE)
+ansari.test(temperature ~ sex, data = ICUtmp[-398,], conf.int = TRUE)
+```
+
+
+```{r}
+## Pearson without patient 398
+cor.test(ICUData$temperature[-398], ICUData$heart.rate[-398])
+## Spearman
+cor.test(ICUData$temperature, ICUData$heart.rate, method = "spearman")
+## Kendall
+cor.test(ICUData$temperature, ICUData$heart.rate, method = "kendall")
+```
+
+
+```{r}
+## Spearman
+SpearmanRho(ICUData$temperature, ICUData$heart.rate, conf.level = 0.95)
+## Kendall
+kendall.ci(ICUData$temperature, ICUData$heart.rate)
+```
+
+
+```{r}
+cor.test(rank(ICUData$temperature), rank(ICUData$heart.rate))
+```
+
+
+```{r}
+## Pearson
+cor.test(ICUData$temperature[-398], ICUData$heart.rate[-398], 
+         alternative = "less", conf.level = 0.99)$conf.int
+## Spearman
+SpearmanRho(ICUData$temperature, ICUData$heart.rate, conf.level = 0.98)
+cor.test(rank(ICUData$temperature), rank(ICUData$heart.rate), 
+         alternative = "less", conf.level = 0.99)$conf.int
+## Kendall
+kendall.ci(ICUData$temperature, ICUData$heart.rate, type = "u", 
+           alpha = 0.01)
+```
+
+
+```{r}
+## Shapiro-Wilk test
+shapiro.test(ICUData$temperature[-398])
+## Lilliefors (Kolmogorov-Smirnov) test
+LillieTest(ICUData$temperature[-398])
+## Cramer-von Mises Test
+CramerVonMisesTest(ICUData$temperature[-398])
+## Shapiro-Francia Test
+ShapiroFranciaTest(ICUData$temperature[-398])
+```
