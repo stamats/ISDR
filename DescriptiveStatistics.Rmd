@@ -31,6 +31,19 @@ str(ICUData)
 ```
 
 
+```{r}
+ICUData <- read.csv(file = "ICUData.csv", stringsAsFactors = TRUE)
+## resp.
+Link <- "https://raw.githubusercontent.com/stamats/ISDR/main/ICUData.csv"
+ICUData <- read.csv(file = Link, stringsAsFactors = TRUE)
+```
+
+
+```{r}
+str(ICUData)
+```
+
+
 ## 2.4 Excursus: Installation of Contributed Packages
 
 ```{r, eval=FALSE}
@@ -118,6 +131,11 @@ quantile(x, type = 6, probs = 0.2)
 
 
 ```{r}
+illustrate.quantile(x, alpha = 0.2)
+```
+
+
+```{r}
 median(ICUData$SAPS.II)
 ## also possible
 quantile(ICUData$SAPS.II, probs = 0.5)
@@ -125,7 +143,10 @@ quantile(ICUData$SAPS.II, probs = 0.5)
 
 
 ```{r}
+## length of the interval
 IQR(ICUData$SAPS.II)
+## IQR-interval
+quantile(ICUData$SAPS.II, probs = c(0.25, 0.75))
 ```
 
 
@@ -162,23 +183,37 @@ boxplot(ICUData$SAPS.II, main = "500 ICU patients", ylab = "SAPS II score")
 
 
 ```{r}
-ggplot(ICUData, aes(x = 1, y = SAPS.II)) +
-  geom_boxplot() + xlim(0, 2) + ylab("SAPS II Score") +
-  ggtitle("500 ICU Patients")
+illustrate.boxplot(ICUData$SAPS.II)
 ```
 
 
 ```{r}
 ggplot(ICUData, aes(x = 1, y = SAPS.II)) +
   geom_boxplot() + xlim(0, 2) + ylab("SAPS II Score") +
-  geom_point() + ggtitle("500 ICU Patients")
+  ggtitle("500 ICU Patients") +
+  ## remove labels from x-axis
+  xlab("") + theme(axis.ticks.x = element_blank(), 
+                   axis.text.x = element_blank())
 ```
 
 
 ```{r}
 ggplot(ICUData, aes(x = 1, y = SAPS.II)) +
   geom_boxplot() + xlim(0, 2) + ylab("SAPS II Score") +
-  geom_point(alpha = 0.1) + ggtitle("500 ICU Patients")
+  geom_point() + ggtitle("500 ICU Patients") +
+  ## remove labels from x-axis
+  xlab("") + theme(axis.ticks.x = element_blank(), 
+                   axis.text.x = element_blank())
+```
+
+
+```{r}
+ggplot(ICUData, aes(x = 1, y = SAPS.II)) +
+  geom_boxplot() + xlim(0, 2) + ylab("SAPS II Score") +
+  geom_point(alpha = 0.1) + ggtitle("500 ICU Patients") +
+  ## remove labels from x-axis
+  xlab("") + theme(axis.ticks.x = element_blank(), 
+                   axis.text.x = element_blank())
 ```
 
 
@@ -186,7 +221,10 @@ ggplot(ICUData, aes(x = 1, y = SAPS.II)) +
 ggplot(ICUData, aes(x = 1, y = SAPS.II)) +
   geom_boxplot() + xlim(0, 2) + ylab("SAPS II Score") +
   geom_jitter(height = 0, width = 0.1, alpha = 0.2) + 
-  ggtitle("500 ICU Patients")
+  ggtitle("500 ICU Patients") +
+  ## remove labels from x-axis
+  xlab("") + theme(axis.ticks.x = element_blank(), 
+                   axis.text.x = element_blank())
 ```
 
 
