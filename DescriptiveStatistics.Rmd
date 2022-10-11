@@ -1,7 +1,7 @@
 ---
 title: "Chapter 2: Descriptive Statistics"
 author: "Matthias Kohl"
-date: "March 2021"
+date: "October 2022"
 output:
   rmarkdown::html_document:
     theme: united
