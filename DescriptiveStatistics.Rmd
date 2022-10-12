@@ -22,6 +22,12 @@ ICUData <- read.csv(file = "ICUData.csv")
 
 
 ```{r}
+Link <- "https://raw.githubusercontent.com/stamats/ISDR/main/ICUData.csv"
+ICUData <- read.csv(file = Link)
+```
+
+
+```{r}
 View(ICUData)
 ```
 
