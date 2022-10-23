@@ -1,7 +1,7 @@
 ---
 title: "Chapter 5: Estimation"
 author: "Matthias Kohl"
-date: "April 2021"
+date: "October 2022"
 output:
   rmarkdown::html_document:
     theme: united
@@ -17,30 +17,34 @@ BiocManager::install("Biobase", update = FALSE)
 
 
 ```{r, eval=FALSE}
-install.packages(c("distrMod", "qqplotr", "RobLox", "MKinfer", 
+install.packages(c("distrMod", "qqplotr", "RobLox", "gridExtra", "MKinfer", 
                    "ROptEst", "RobExtremes", "MKpower", "MKclass"))
 ```
 
 
+```{r, eval=FALSE}
+## Development version from GitHub
+# install.packages("remotes")
+remotes::install_github("stamats/rmx", build_vignettes = TRUE)
+```
+
+
 ```{r}
-library(DescTools)
-library(scales)
 library(ggplot2)
 library(MKdescr)
-library(RColorBrewer)
-library(ggsci)
-library(distr)
-library(distr6)
 library(distrMod)
 library(qqplotr)
 library(RobLox)
+library(gridExtra)
 library(MKinfer)
 library(ROptEst)
 library(RobExtremes)
 library(MKpower)
 library(MKclass)
+library(rmx)
 library(MASS)
 library(boot)
+library(parallel)
 ```
 
 
@@ -49,7 +53,7 @@ library(boot)
 ## 5.2 Point Estimation
 
 ```{r}
-ICUData <- read.csv(file = "ICUData.csv")
+ICUData <- read.csv(file = "ICUData.csv", stringsAsFactors = TRUE)
 ## unbiased and efficient
 table(ICUData$liver.failure)/nrow(ICUData)
 ```
@@ -205,7 +209,38 @@ roblox(ICUData$temperature, eps.lower = 1/500, eps.upper = 0.05, k = 3)
 
 
 ```{r}
+res.rmx <- rmx(ICUData$temperature, model = "norm", 
+               eps.lower = 1/500, eps.upper = 0.05)
+res.rmx
+```
+
+
+```{r}
+summary(res.rmx)
+```
+
+
+```{r}
+outlier(res.rmx)
+getOutliers(res.rmx)
+```
+
+
+```{r, fig.height=14}
+gg1 <- ppPlot(res.rmx)
+gg2 <- qqPlot(res.rmx)
+gg3 <- dPlot(res.rmx)
+grid.arrange(gg1, gg2, gg3, ncol = 1)
+```
+
+
+```{r, eval=FALSE}
 path.package("ROptEst")
+```
+
+
+```{r, eval=FALSE}
+vignette("rmx")
 ```
 
 
@@ -248,7 +283,7 @@ perfMeasures(pred = Bili, truth = ICUData$liver.failure,
 ```
 
 
-```{r}
+```{r, cache=TRUE}
 B <- 1000
 n0 <- sum(ICUData$liver.failure == 0)
 ind0 <- which(ICUData$liver.failure == 0)
@@ -438,19 +473,20 @@ confint(MDp)
 
 
 ```{r}
-## x: Vector of observations
+## x: vector of observations
 ## i: vector of indices of bootstrap sample.
 KSMDEst <- function(x, i){
-  estimate(KolmogorovMDEstimator(x[i], ParamFamily = BinomFamily(size = 1)))
+  estimate(KolmogorovMDEstimator(x[i], ParamFamily = NormLocationScaleFamily()))
 }
 ```
 
 
-```{r}
+```{r, cache=TRUE}
 ## bootstrap estimates
-boot.out <- boot(ICUData$liver.failure, statistic = KSMDEst, R = 999)
+boot.out <- boot(ICUData$temperature, statistic = KSMDEst, R = 999)
 ## bootstrap confidence intervals
-boot.ci(boot.out)
+boot.ci(boot.out, index = 1)
+boot.ci(boot.out, index = 2)
 ```
 
 
@@ -467,7 +503,20 @@ confint(ALest, symmetricBias())
 
 
 ```{r}
-## x: Vector of observations
+RMXest <- rmx(ICUData$temperature, model = "norm", 
+               eps.lower = 1/500, eps.upper = 0.05)
+confint(RMXest)
+confint(RMXest, method = "as.bias")
+```
+
+
+```{r}
+confint(RMXest, method = "boot")
+```
+
+
+```{r}
+## x: vector of observations
 ## i: vector of indices of bootstrap sample.
 RMXEst <- function(x, i){
   res <- roblox(x[i], eps.lower = 1/500, eps.upper = 0.05, k = 3)
@@ -476,7 +525,7 @@ RMXEst <- function(x, i){
 ```
 
 
-```{r}
+```{r, cache=TRUE}
 ## bootstrap estimates
 boot.out <- boot(ICUData$temperature, statistic = RMXEst, R = 999)
 ## bootstrap confidence interval for the mean value.
@@ -487,11 +536,175 @@ boot.ci(boot.out, index = c(2,4))
 
 
 ```{r}
-Model <- BinomFamily(size = 1)
-ALest <- roptest(ICUData$liver.failure, Model,
-                 eps.lower = 0, eps.upper = 0.02, steps = 3)
-confint(ALest)
-confint(ALest, symmetricBias())
+ICUData.home <- ICUData[ICUData$outcome == "home",]
+```
+
+
+```{r, cache=TRUE}
+Model <- GammaFamily()
+MLest <- MLEstimator(ICUData.home$SAPS.II, Model)
+MLest
+MDest <- CvMMDEstimator(ICUData.home$SAPS.II, Model)
+MDest
+RMXest <- roptest(ICUData.home$SAPS.II, Model, 
+                  eps.lower = 0, eps.upper = 0.05, steps = 3)
+RMXest
+```
+
+
+```{r, fig.width=9}
+gg1 <- ggplot(ICUData.home, aes(sample = SAPS.II)) + 
+  qqplotr::stat_pp_band(dparams = list(scale = 5.58, shape = 7.0), 
+                        distribution = "gamma") + 
+  qqplotr::stat_pp_point(dparams = list(scale = 5.58, shape = 7.0),
+                         distribution = "gamma") +
+  qqplotr::stat_pp_line() + 
+  xlab("Cumulative probability of the model") + 
+  ylab("Observed cumulative probability") + 
+  ggtitle("pp-Plot: ML Estimator")
+gg2 <- ggplot(ICUData.home, aes(sample = SAPS.II)) + 
+  qqplotr::stat_qq_band(dparams = list(scale = 5.58, shape = 7.0), 
+                        distribution = "gamma", identity = TRUE) + 
+  qqplotr::stat_qq_point(dparams = list(scale = 5.58, shape = 7.0),
+                         distribution = "gamma") + 
+  qqplotr::stat_qq_line(dparams = list(scale = 5.58, shape = 7.0), 
+                        distribution = "gamma", identity = TRUE) + 
+  xlab("Model for SAPS-II") + 
+  ylab("Observed SAPS-II Scores") + 
+  ggtitle("qq-Plot: ML Estimator")
+grid.arrange(gg1, gg2, nrow = 1)
+```
+
+
+```{r, fig.width=9}
+gg1 <- ggplot(ICUData.home, aes(sample = SAPS.II)) + 
+  qqplotr::stat_pp_band(dparams = list(scale = 6.03, shape = 6.46), 
+                        distribution = "gamma") + 
+  qqplotr::stat_pp_point(dparams = list(scale = 6.03, shape = 6.46),
+                         distribution = "gamma") +
+  qqplotr::stat_pp_line() + 
+  xlab("Cumulative probability of the model") + 
+  ylab("Observed cumulative probability") + 
+  ggtitle("pp-Plot: CvM-MD Estimator")
+gg2 <- ggplot(ICUData.home, aes(sample = SAPS.II)) + 
+  qqplotr::stat_qq_band(dparams = list(scale = 6.03, shape = 6.46), 
+                        distribution = "gamma", identity = TRUE) + 
+  qqplotr::stat_qq_point(dparams = list(scale = 6.03, shape = 6.46),
+                         distribution = "gamma") + 
+  qqplotr::stat_qq_line(dparams = list(scale = 6.03, shape = 6.46), 
+                        distribution = "gamma", identity = TRUE) + 
+  xlab("Model for SAPS-II") + 
+  ylab("Observed SAPS-II Scores") + 
+  ggtitle("qq-Plot: CvM-MD Estimator")
+grid.arrange(gg1, gg2, nrow = 1)
+```
+
+
+```{r, fig.width=9}
+gg1 <- ggplot(ICUData.home, aes(sample = SAPS.II)) + 
+  qqplotr::stat_pp_band(dparams = list(scale = 5.90, shape = 6.66), 
+                        distribution = "gamma") + 
+  qqplotr::stat_pp_point(dparams = list(scale = 5.90, shape = 6.66),
+                         distribution = "gamma") +
+  qqplotr::stat_pp_line() + 
+  xlab("Cumulative probability of the model") + 
+  ylab("Observed cumulative probability") + 
+  ggtitle("pp-Plot: RMX Estimator")
+gg2 <- ggplot(ICUData.home, aes(sample = SAPS.II)) + 
+  qqplotr::stat_qq_band(dparams = list(scale = 5.90, shape = 6.66), 
+                        distribution = "gamma", identity = TRUE) + 
+  qqplotr::stat_qq_point(dparams = list(scale = 5.90, shape = 6.66),
+                         distribution = "gamma") + 
+  qqplotr::stat_qq_line(dparams = list(scale = 5.90, shape = 6.66), 
+                        distribution = "gamma", identity = TRUE) + 
+  xlab("Model for SAPS-II") + 
+  ylab("Observed SAPS-II Scores") + 
+  ggtitle("qq-Plot: RMX Estimator")
+grid.arrange(gg1, gg2, nrow = 1)
+```
+
+
+```{r}
+ggplot(ICUData.home, aes(x=SAPS.II)) +
+  geom_histogram(aes(y=..density..), binwidth = 5, fill = "darkgrey") +
+  geom_density(color = "orange") + ylab("Dichte") +
+  stat_function(fun = dgamma, args = list(scale = 5.58, shape = 7.0),
+                color = "darkred", lwd = 1.5) +
+  stat_function(fun = dgamma, args = list(scale = 6.03, shape = 6.46),
+                color = "darkblue", lwd = 1.5) +
+  stat_function(fun = dgamma, args = list(scale = 5.90, shape = 6.66),
+                color = "darkgreen", lwd = 1.5) +
+  annotate("text", x = 70, y = 0.035, col = "darkred",
+           label = "ML Estimator") +
+  annotate("text", x = 70, y = 0.0325, col = "darkblue",
+           label = "CvM-MD Estimator") +
+  annotate("text", x = 70, y = 0.030, col = "darkgreen",
+           label = "RMX Estimator") +
+  ggtitle("Comparison of Estimated Models")
+```
+
+
+```{r}
+distrMod::confint(MLest)
+distrMod::confint(MDest)
+distrMod::confint(RMXest)
+```
+
+
+```{r}
+## x: vector of observations
+## i: vector of indices of bootstrap sample.
+MLEst <- function(x, i){
+  res <- MLEstimator(x[i], ParamFamily = GammaFamily())
+  c(estimate(res), diag(asvar(res)))
+}
+MDEst <- function(x, i){
+  res <- CvMMDEstimator(x[i], ParamFamily = GammaFamily())
+  c(estimate(res), diag(asvar(res)))
+}
+RMXEst <- function(x, i){
+  res <- roptest(x[i], ParamFamily = GammaFamily(), 
+                 eps.lower = 0, eps.upper = 0.05, steps = 3)
+  c(estimate(res), diag(asvar(res)))
+}
+```
+
+
+```{r}
+nr.cpus <- detectCores()-1
+```
+
+
+```{r, cache=TRUE}
+## bootstrap estimates
+boot.out <- boot(ICUData.home$SAPS.II, statistic = MLEst, R = 999,
+                 parallel = "multicore", ncpus = nr.cpus)
+## bootstrap confidence interval for scale
+boot.ci(boot.out, index = c(1,3))
+## bootstrap confidence interval for shape
+boot.ci(boot.out, index = c(2,4))
+```
+
+
+```{r, cache=TRUE}
+## bootstrap estimates
+boot.out <- boot(ICUData.home$SAPS.II, statistic = MDEst, R = 999,
+                 parallel = "multicore", ncpus = nr.cpus)
+## bootstrap confidence interval for scale
+boot.ci(boot.out, index = c(1,3))
+## bootstrap confidence interval for shape
+boot.ci(boot.out, index = c(2,4))
+```
+
+
+```{r, cache=TRUE, eval=FALSE}
+## bootstrap estimates
+boot.out <- boot(ICUData.home$SAPS.II, statistic = RMXEst, R = 999,
+                 parallel = "multicore", ncpus = nr.cpus)
+## bootstrap confidence interval for scale
+boot.ci(boot.out, index = c(1,3))
+## bootstrap confidence interval for shape
+boot.ci(boot.out, index = c(2,4))
 ```
 
 
