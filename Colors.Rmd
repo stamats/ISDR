@@ -52,12 +52,13 @@ rgb(red = 228, green = 26, blue = 28, maxColorValue = 255)
 
 
 ```{r}
+str(colors())
 col2rgb("royalblue")
 ```
 
 
 ```{r, fig.width=9}
-ICUData <- read.csv(file = "ICUData.csv")
+ICUData <- read.csv(file = "ICUData.csv", stringsAsFactors = TRUE)
 barplot(table(ICUData$surgery), main = "Types of surgery",
         ylab = "Absolute frequency", col = cols)
 ```
