@@ -10,90 +10,30 @@ output:
 ---
 
 ```{r, eval=FALSE}
-BiocManager::install("mixOmics", update = FALSE)
-install.packages(c("RVAideMemoire", "coin", "exactRankTests", 
-                   "ggpubr", "datarium", "gridExtra", "NSM3"))
+install.packages(c("coin", "exactRankTests", "ggpubr", "datarium"))
 ```
 
 
 ```{r}
 library(DescTools)
-library(scales)
 library(ggplot2)
-library(MKdescr)
-library(RColorBrewer)
 library(ggsci)
-library(distr)
-library(distr6)
-library(distrMod)
-library(qqplotr)
-library(RobLox)
+library(gridExtra)
 library(MKinfer)
-library(ROptEst)
-library(RobExtremes)
-library(MKpower)
-library(MKclass)
-library(MASS)
-library(boot)
-library(RVAideMemoire)
 library(coin)
 library(exactRankTests)
 library(ggpubr)
 library(datarium)
-library(gridExtra)
-library(NSM3)
 ```
 
 
 ## 6.1 Introduction
 
-```{r}
-power.t.test(delta = 1, sd = 1, sig.level = 0.05, power = 0.8)
-```
-
-
-```{r}
-power.t.test(n = 20, delta = 1, sd = 1, sig.level = 0.05)
-```
-
-
-```{r}
-qt(0.975, df = 38)
-```
-
-
-```{r}
-## random numbers for demonstration
-X1 <- rnorm(n = 20, mean = 0.5, sd = 1)
-X2 <- rnorm(n = 20, mean = 1.5, sd = 1)
-```
-
-
-```{r}
-t.test(X1, X2, var.equal = TRUE)$statistic
-```
-
-
-```{r}
-2*pt(abs(t.test(X1, X2, var.equal = TRUE)$statistic), df = 38, 
-     lower.tail = FALSE)
-```
-
-
-```{r}
-t.test(X1, X2, var.equal = TRUE)$p.value
-```
-
-
-```{r}
-t.test(X1, X2, var.equal = TRUE)
-```
-
-
 ## 6.2 Nominal variables
 
 ```{r}
-ICUData <- read.csv(file = "ICUData.csv", fileEncoding = "utf8")
+ICUData <- read.csv(file = "ICUData.csv", fileEncoding = "utf8",
+                    stringsAsFactors = TRUE)
 table(ICUData$liver.failure)
 ## exact test
 binom.test(20, 500, p = 0.05, alternative = "less")
@@ -112,14 +52,6 @@ binomCI(20, 500, method = "boot", alternative = "less")
 ```{r}
 ## exact test
 binom.test(20, 500, p = 0.06, alternative = "less")
-```
-
-
-```{r, cache=TRUE}
-table(ICUData$outcome)
-## takes quite a long time to compute
-multinomial.test(as.vector(table(ICUData$outcome)), 
-                 p = c(0.10, 0.30, 0.20, 0.40))
 ```
 
 
@@ -160,11 +92,6 @@ CramerV(x = cont.table, conf.level = 0.95, method = "fisheradj")
 
 
 ```{r}
-cramer.test(cont.table)
-```
-
-
-```{r}
 cont.table <- table(ICUData$surgery, ICUData$outcome)
 cont.table
 ## Fisher's exact test
@@ -173,12 +100,6 @@ fisher.test(cont.table, simulate.p.value = TRUE, B = 1e5)
 chisq.test(cont.table)
 chisq_test(cont.table, distribution = "approximate")
 CramerV(x = cont.table, conf.level = 0.95)
-cramer.test(cont.table)
-```
-
-
-```{r}
-fisher.multcomp(cont.table, p.method = "holm")
 ```
 
 
@@ -315,7 +236,7 @@ t.test(temperature ~ sex, data = ICUData[-398,])
 
 ```{r}
 hsu.t.test(temperature ~ sex, data = ICUData[-398,])
-MKinfer::perm.t.test(temperature ~ sex, data = ICUData[-398,])
+perm.t.test(temperature ~ sex, data = ICUData[-398,])
 boot.t.test(temperature ~ sex, data = ICUData[-398,])
 ```
 
@@ -353,7 +274,7 @@ wilcox.test(temperature ~ sex, data = ICUData[-398,],
             conf.int = TRUE)
 ## with patient 398
 wilcox.test(temperature ~ sex, data = ICUData, conf.int = TRUE)
-wilcox_test(temperature ~ factor(sex), data = ICUData, conf.int = TRUE,
+wilcox_test(temperature ~ sex, data = ICUData, conf.int = TRUE,
             distribution = "approximate")
 wilcox.exact(temperature ~ sex, data = ICUData, conf.int = TRUE)
 ```
@@ -393,7 +314,7 @@ kruskal.test(temperature ~ outcome, data = ICUData[-398,])
 
 
 ```{r}
-kruskal_test(temperature ~ factor(outcome), data = ICUData, 
+kruskal_test(temperature ~ outcome, data = ICUData, 
              distribution = "approximate")
 ```
 
@@ -571,7 +492,7 @@ cor.test(ICUData$temperature, ICUData$heart.rate, method = "kendall")
 ## Spearman
 SpearmanRho(ICUData$temperature, ICUData$heart.rate, conf.level = 0.95)
 ## Kendall
-kendall.ci(ICUData$temperature, ICUData$heart.rate)
+KendallTauB(ICUData$temperature, ICUData$heart.rate, conf.level = 0.95)
 ```
 
 
@@ -589,8 +510,7 @@ SpearmanRho(ICUData$temperature, ICUData$heart.rate, conf.level = 0.98)
 cor.test(rank(ICUData$temperature), rank(ICUData$heart.rate), 
          alternative = "less", conf.level = 0.99)$conf.int
 ## Kendall
-kendall.ci(ICUData$temperature, ICUData$heart.rate, type = "u", 
-           alpha = 0.01)
+KendallTauB(ICUData$temperature, ICUData$heart.rate, conf.level = 0.98)
 ```
 
 
