@@ -76,6 +76,46 @@ ggplot(ICUData, aes(x=surgery)) +
 ```
 
 
+```{r}
+pal_npg()
+```
+
+
+```{r}
+pal_npg()(5)
+```
+
+
+```{r, warning=TRUE}
+cols2 <- brewer.pal(n = 2, name = "Set1")
+cols2
+```
+
+
+```{r}
+cols2 <- brewer.pal(n = 3, name = "Set1")[1:2]
+cols2
+```
+
+
+```{r}
+cols3 <- pal_npg()(5)[c(5,1,3)]
+cols3
+```
+
+
+```{r}
+cols11 <- brewer.pal(n = 11, name = "RdYlBu")
+cols11
+```
+
+
+```{r}
+cols32 <- colorRampPalette(cols11)(32)
+cols32
+```
+
+
 ## 3.2 Excursus: Export of Diagrams
 
 ```{r, eval = FALSE}
