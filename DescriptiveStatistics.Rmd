@@ -491,7 +491,7 @@ lines(density(ICUData$temperature[-398]))
 
 ```{r}
 ggplot(ICUData[-398,], aes(x=temperature)) +
-  geom_histogram(aes(y=..density..), binwidth = 0.5) +
+  geom_histogram(aes(y=after_stat(density)), binwidth = 0.5) +
   geom_density(color = "orange") + ylab("Density") +
   xlab("Maximum body temperature") +
   ggtitle("500 ICU patients")
@@ -500,14 +500,11 @@ ggplot(ICUData[-398,], aes(x=temperature)) +
 
 ```{r}
 ggplot(ICUData[-398,], aes(x=temperature)) +
-  geom_histogram(aes(y=..density..), binwidth = 0.5, closed = "right") +
+  geom_histogram(aes(y=after_stat(density)), 
+                 breaks = seq(from = 33, to = 42, by = 0.5), 
+                 closed = "right") +
   geom_density(color = "orange") + ylab("Density") +
   xlab("Maximum body temperature - closed = 'right'") +
-  ggtitle("500 ICU patients")
-ggplot(ICUData[-398,], aes(x=temperature)) +
-  geom_histogram(aes(y=..density..), binwidth = 0.5, closed = "left") +
-  geom_density(color = "orange") + ylab("Density") +
-  xlab("Maximum body temperature - closed = 'left'") +
   ggtitle("500 ICU patients")
 ```
 
