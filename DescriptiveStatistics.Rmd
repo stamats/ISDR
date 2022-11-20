@@ -477,14 +477,14 @@ ggplot(ICUData, aes(x = LOS)) + geom_histogram(binwidth = 1) +
 
 ```{r}
 plot(density(ICUData$temperature[-398]), xlab = "Maximum body temperature",
-     ylab = "Density", main = "500 ICU patients")
+     ylab = "Density", main = "499 ICU patients")
 ```
 
 
 ```{r}
 hist(ICUData$temperature[-398], breaks = seq(from = 33, to = 42, by = 0.5),
      xlab = "Maximum body temperature", ylab = "Density", freq = FALSE,
-     main = "500 ICU patients")
+     main = "499 ICU patients")
 lines(density(ICUData$temperature[-398]))
 ```
 
@@ -494,7 +494,7 @@ ggplot(ICUData[-398,], aes(x=temperature)) +
   geom_histogram(aes(y=after_stat(density)), binwidth = 0.5) +
   geom_density(color = "orange") + ylab("Density") +
   xlab("Maximum body temperature") +
-  ggtitle("500 ICU patients")
+  ggtitle("499 ICU patients")
 ```
 
 
@@ -505,7 +505,7 @@ ggplot(ICUData[-398,], aes(x=temperature)) +
                  closed = "right") +
   geom_density(color = "orange") + ylab("Density") +
   xlab("Maximum body temperature - closed = 'right'") +
-  ggtitle("500 ICU patients")
+  ggtitle("499 ICU patients")
 ```
 
 
@@ -570,7 +570,7 @@ ggplot(ICUData[-398,], aes(x=temperature, y=heart.rate)) +
   ## Linear regression line
   geom_smooth(method = "lm", se = FALSE) +
   ## title and axes labels
-  ggtitle("500 ICU patients") + xlab("Maximum body temperature") +
+  ggtitle("499 ICU patients") + xlab("Maximum body temperature") +
   ylab("Maximum heart rate")
 ```
 
