@@ -25,7 +25,8 @@ install.packages(c("distrMod", "qqplotr", "RobLox", "gridExtra", "MKinfer",
 ```{r, eval=FALSE}
 ## Development version from GitHub
 # install.packages("remotes")
-remotes::install_github("stamats/rmx", build_vignettes = TRUE)
+remotes::install_github("stamats/rmx", upgrade = "never",
+                        build = FALSE, build_vignettes = TRUE)
 ```
 
 
@@ -99,10 +100,11 @@ legend("topright", fill = "darkred", legend = "Estimated model")
 
 ```{r}
 ggplot(ICUData[-398,], aes(x=temperature)) +
-  geom_histogram(aes(y=..density..), binwidth = 0.5, fill = "darkgrey") +
+  geom_histogram(aes(y=after_stat(density)), binwidth = 0.5, 
+                 fill = "darkgrey") +
   geom_density(color = "orange") + ylab("Density") +
   stat_function(fun = dnorm, args = list(mean = 37.7, sd = 1.2),
-                color = "darkred", lwd = 2) +
+                color = "darkred", linewidth = 2) +
   annotate("text", x = 40, y = 0.31, col = "darkred",
            label = "Estimated model") +
   ggtitle("Maximum body temperature")
@@ -626,14 +628,15 @@ grid.arrange(gg1, gg2, nrow = 1)
 
 ```{r}
 ggplot(ICUData.home, aes(x=SAPS.II)) +
-  geom_histogram(aes(y=..density..), binwidth = 5, fill = "darkgrey") +
+  geom_histogram(aes(y=after_stat(density)), binwidth = 5, 
+                 fill = "darkgrey") +
   geom_density(color = "orange") + ylab("Dichte") +
   stat_function(fun = dgamma, args = list(scale = 5.58, shape = 7.0),
-                color = "darkred", lwd = 1.5) +
+                color = "darkred", linewidth = 1.5) +
   stat_function(fun = dgamma, args = list(scale = 6.03, shape = 6.46),
-                color = "darkblue", lwd = 1.5) +
+                color = "darkblue", linewidth = 1.5) +
   stat_function(fun = dgamma, args = list(scale = 5.90, shape = 6.66),
-                color = "darkgreen", lwd = 1.5) +
+                color = "darkgreen", linewidth = 1.5) +
   annotate("text", x = 70, y = 0.035, col = "darkred",
            label = "ML Estimator") +
   annotate("text", x = 70, y = 0.0325, col = "darkblue",
