@@ -1,6 +1,6 @@
 # Introduction to Statistical Data Analysis with R
 
-<img src="hex-ISDR.png" width="600">
+<p align="center"><img src="hex-ISDR.png" width="500"></p>
 
 In the repository you can find files for my book "Introduction to Statistical Data Analysis with R" (2nd edition).
 
