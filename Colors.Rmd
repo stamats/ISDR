@@ -65,10 +65,10 @@ barplot(table(ICUData$surgery), main = "Types of surgery",
 
 
 ```{r, fig.width=9}
-## Define data
 ggplot(ICUData, aes(x=surgery)) +
   ## Add bars of relative frequencies
-  geom_bar(aes(y = 100*(..count..)/sum(..count..)), width = 0.5,
+  geom_bar(aes(y = 100*(after_stat(count))/sum(after_stat(count))), 
+           width = 0.5,
            ## Fill bars with color
            fill = pal_npg()(5)) +
   ## Title and label of y-axis
@@ -154,16 +154,17 @@ cols1 <- rev(brewer.pal(5, "Blues"))
 cols2 <- rep("#31A354", 3)
 cols3 <- brewer.pal(9, "Reds")
 hist(ICUData$temperature[-398], breaks = seq(from = 33.5, to = 42, by = 0.5),
-     main = "500 ICU patients", ylab = "Absolute frequency",
+     main = "499 ICU patients", ylab = "Absolute frequency",
      xlab = "Maximum body temperature", col = c(cols1, cols2, cols3))
 ```
 
 
 ```{r}
 ggplot(ICUData[-398,], aes(x=temperature)) +
-  geom_histogram(binwidth = 0.5, fill = c(cols1, cols2, cols3)) +
+  geom_histogram(breaks = seq(from = 33.5, to = 42, by = 0.5), 
+                 fill = c(cols1, cols2, cols3)) +
   ylab("Absolute frequency") + xlab("Maximum body temperature") +
-  ggtitle("500 ICU patients")
+  ggtitle("499 ICU patients")
 ```
 
 
@@ -193,6 +194,6 @@ ggplot(ICUData[-398,], aes(x=temperature, y=heart.rate, colour=sex)) +
   ## colors
   scale_colour_manual(values = c("#E41A1C", "#377EB8")) +
   ## labeling
-  ggtitle("500 ICU patients") + xlab("Maximum body temperature") +
+  ggtitle("499 ICU patients") + xlab("Maximum body temperature") +
   ylab("Maximum heart frequency")
 ```
