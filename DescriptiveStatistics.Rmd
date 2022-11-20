@@ -99,7 +99,8 @@ barplot(table(ICUData$surgery), main = "Kind of surgery",
 ## Assign data
 ggplot(ICUData, aes(x=surgery)) +
   ## Add bars with relative frequencies
-  geom_bar(aes(y = (..count..)/sum(..count..)), width = 0.5) +
+  geom_bar(aes(y = (after_stat(count))/sum(after_stat(count))), 
+           width = 0.5) +
   ## The percent of relative frequency
   scale_y_continuous(labels = percent_format(accuracy = 1)) +
   ## Title and label of y axis
@@ -175,7 +176,7 @@ sIQR(ICUData$SAPS.II)
 ## Assign data
 ggplot(ICUData, aes(x=SAPS.II)) +
   ## Add bars
-  geom_bar(aes(y = 100*(..count..)/sum(..count..))) +
+  geom_bar(aes(y = 100*(after_stat(count))/sum(after_stat(count)))) +
   ## Percent of the relative frequency
   scale_y_continuous(labels = percent_format(accuracy = 1)) +
   ## Title and label of y axis
@@ -299,7 +300,9 @@ barplot(prop.table(table(ICUData$sex, ICUData$surgery), margin = 1),
 
 ```{r}
 ggplot(ICUData, aes(x = surgery, fill = sex)) +
-  geom_bar(aes(y = (..count..)/tapply(..count.., ..fill.., sum)[..fill..]), 
+  geom_bar(aes(y = (after_stat(count))/tapply(after_stat(count), 
+                                              after_stat(fill), 
+                                              sum)[after_stat(fill)]), 
            position = "dodge") + scale_fill_grey() + 
   scale_y_continuous(labels = percent_format(accuracy = 1)) +
   ylab("Relative frequency [%]") + xlab("Surgery") +
