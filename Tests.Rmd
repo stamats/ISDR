@@ -246,11 +246,11 @@ AM <- tapply(ICUData$temperature[-398], ICUData$sex[-398], mean)
 CI <- tapply(ICUData$temperature[-398], ICUData$sex[-398], meanCI)
 n <- tapply(ICUData$temperature[-398], ICUData$sex[-398], length)
 DF <- data.frame(AM = AM, 
-                 CI.lo = c(CI$male$conf.int[1], 
-                           CI$female$conf.int[1]),
-                 CI.up = c(CI$male$conf.int[2], 
-                           CI$female$conf.int[2]),
-                 sex = c("male", "female"),
+                 CI.lo = c(CI$female$conf.int[1], 
+                           CI$male$conf.int[1]),
+                 CI.up = c(CI$female$conf.int[2], 
+                           CI$male$conf.int[2]),
+                 sex = c("female", "male"),
                  n = n)
 DF$sex <- factor(DF$sex, levels = c("female", "male"))
 DF
@@ -343,14 +343,14 @@ AM <- tapply(ICUData$temperature[-398], ICUData$outcome[-398], mean)
 CI <- tapply(ICUData$temperature[-398], ICUData$outcome[-398], meanCI)
 n <- tapply(ICUData$temperature[-398], ICUData$outcome[-398], length)
 DF <- data.frame(AM = AM, 
-                 CI.lo = c(CI$`other hospital`$conf.int[1], 
+                 CI.lo = c(CI$died$conf.int[1], 
                            CI$`home`$conf.int[1],
-                           CI$`secondary care/rehab`$conf.int[1],
-                           CI$died$conf.int[1]),
-                 CI.up = c(CI$`other hospital`$conf.int[2], 
+                           CI$`other hospital`$conf.int[1],
+                           CI$`secondary care/rehab`$conf.int[1]),
+                 CI.up = c(CI$died$conf.int[2], 
                            CI$`home`$conf.int[2],
-                           CI$`secondary care/rehab`$conf.int[2],
-                           CI$died$conf.int[2]),
+                           CI$`other hospital`$conf.int[2],
+                           CI$`secondary care/rehab`$conf.int[2]),
                  outcome = names(CI),
                  n = n)
 DF$outcome <- factor(DF$outcome, levels = c("home", "secondary care/rehab",
