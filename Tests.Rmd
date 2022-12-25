@@ -339,6 +339,14 @@ pairwise.fun(ICUData$temperature[-398], ICUData$outcome[-398],
 
 
 ```{r}
+## pairwise Welch t-tests without patient 398
+pairwise.ext.t.test(ICUData$temperature[-398], ICUData$outcome[-398])
+## pairwise Wilcoxon-Mann-Whitney U tests
+pairwise.wilcox.exact(ICUData$temperature, ICUData$outcome)
+```
+
+
+```{r}
 AM <- tapply(ICUData$temperature[-398], ICUData$outcome[-398], mean)
 CI <- tapply(ICUData$temperature[-398], ICUData$outcome[-398], meanCI)
 n <- tapply(ICUData$temperature[-398], ICUData$outcome[-398], length)
@@ -430,6 +438,14 @@ pairwise.fun(SE.long$score, SE.long$time, function(x, y) mean(x-y))
 pairwise.fun(SE.long$score, SE.long$time, function(x, y) sd(x-y))
 ## medians
 pairwise.fun(SE.long$score, SE.long$time, function(x, y) median(x-y))
+```
+
+
+```{r}
+## pairwise Welch t-tests without patient 398
+pairwise.ext.t.test(SE.long$score, SE.long$time, paired = TRUE)
+## pairwise Wilcoxon-Mann-Whitney U tests
+pairwise.wilcox.exact(SE.long$score, SE.long$time, paired = TRUE)
 ```
 
 
