@@ -383,7 +383,7 @@ sd(ICUData$temperature)
 ```{r}
 n <- nrow(ICUData)
 (n-1)/n*var(ICUData$temperature)
-(n-1)/n*sd(ICUData$temperature)
+sqrt((n-1)/n)*sd(ICUData$temperature)
 ```
 
 
