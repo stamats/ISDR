@@ -442,9 +442,9 @@ pairwise.fun(SE.long$score, SE.long$time, function(x, y) median(x-y))
 
 
 ```{r}
-## pairwise Welch t-tests without patient 398
+## pairwise paired t-tests without patient 398
 pairwise.ext.t.test(SE.long$score, SE.long$time, paired = TRUE)
-## pairwise Wilcoxon-Mann-Whitney U tests
+## pairwise Wilcoxon signed rank tests
 pairwise.wilcox.exact(SE.long$score, SE.long$time, paired = TRUE)
 ```
 
