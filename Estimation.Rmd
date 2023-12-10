@@ -116,8 +116,8 @@ ggplot(ICUData[-398,], aes(sample = temperature)) +
   qqplotr::stat_pp_band(dparams = list(mean = 37.7, sd = 1.2)) + 
   qqplotr::stat_pp_point(dparams = list(mean = 37.7, sd = 1.2)) + 
   qqplotr::stat_pp_line() + 
-  xlab("Cumulative distribution of the model") + 
-  ylab("Observed cumulative probability") + 
+  xlab("Observed cumulative probability") + 
+  ylab("Cumulative distribution of the model") + 
   ggtitle("pp-Plot for Norm(37.7, 1.2)")
 ```
 
@@ -561,8 +561,8 @@ gg1 <- ggplot(ICUData.home, aes(sample = SAPS.II)) +
   qqplotr::stat_pp_point(dparams = list(scale = 5.58, shape = 7.0),
                          distribution = "gamma") +
   qqplotr::stat_pp_line() + 
-  xlab("Cumulative probability of the model") + 
-  ylab("Observed cumulative probability") + 
+  xlab("Observed cumulative probability") + 
+  ylab("Cumulative probability of the model") + 
   ggtitle("pp-Plot: ML Estimator")
 gg2 <- ggplot(ICUData.home, aes(sample = SAPS.II)) + 
   qqplotr::stat_qq_band(dparams = list(scale = 5.58, shape = 7.0), 
@@ -585,8 +585,8 @@ gg1 <- ggplot(ICUData.home, aes(sample = SAPS.II)) +
   qqplotr::stat_pp_point(dparams = list(scale = 6.03, shape = 6.46),
                          distribution = "gamma") +
   qqplotr::stat_pp_line() + 
-  xlab("Cumulative probability of the model") + 
-  ylab("Observed cumulative probability") + 
+  xlab("Observed cumulative probability") + 
+  ylab("Cumulative probability of the model") + 
   ggtitle("pp-Plot: CvM-MD Estimator")
 gg2 <- ggplot(ICUData.home, aes(sample = SAPS.II)) + 
   qqplotr::stat_qq_band(dparams = list(scale = 6.03, shape = 6.46), 
@@ -609,8 +609,8 @@ gg1 <- ggplot(ICUData.home, aes(sample = SAPS.II)) +
   qqplotr::stat_pp_point(dparams = list(scale = 5.90, shape = 6.66),
                          distribution = "gamma") +
   qqplotr::stat_pp_line() + 
-  xlab("Cumulative probability of the model") + 
-  ylab("Observed cumulative probability") + 
+  xlab("Observed cumulative probability") + 
+  ylab("Cumulative probability of the model") + 
   ggtitle("pp-Plot: RMX Estimator")
 gg2 <- ggplot(ICUData.home, aes(sample = SAPS.II)) + 
   qqplotr::stat_qq_band(dparams = list(scale = 5.90, shape = 6.66), 
