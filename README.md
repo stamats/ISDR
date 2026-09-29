@@ -1,4 +1,4 @@
-# Introduction to Statistical Data Analysis with R
+# Introduction to Statistical Data Analysis with R - 2nd edition
 
 <p align="center"><img src="hex-ISDR.png" width="500"></p>
 
